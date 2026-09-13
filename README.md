@@ -23,9 +23,11 @@ mall basement. Everything is stored on your own device; nothing is uploaded.
 - **Price tracker** — target / current / lowest / highest / last checked per
   product, a price-history chart, and a per-store comparison table that
   highlights the cheapest sighting.
-- **Budget** — quick presets (AED 4,000 / 5,000 / 5,500 / 6,000 / 7,000) plus any
-  custom amount, with under / approaching / over-budget status. Going over never
-  blocks anything.
+- **Budget limiter** — drag the limit itself, with the plan and your spend marked
+  on the same scale, plus a second slider for how early it warns you (the
+  warning point used to be fixed at 80%). Quick presets and a custom amount are
+  still there. Going over never blocks anything — it only changes what the app
+  tells you.
 - **Add product** — name, price and quantity required; image upload, category,
   brand, store, target price, link and notes optional. Custom products behave
   exactly like preloaded ones.

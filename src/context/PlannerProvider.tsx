@@ -120,6 +120,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'setRateOverride', code, rate }),
       setAutoRefreshRates: (enabled: boolean) =>
         dispatch({ type: 'setAutoRefreshRates', enabled }),
+      setAlertThreshold: (threshold: number) =>
+        dispatch({ type: 'setAlertThreshold', threshold }),
       refreshRates,
       addProduct,
       updateProduct: (id: string, patch: Partial<Product>) =>

@@ -13,8 +13,11 @@ import type {
 import { roundMoney } from '@/lib/money'
 import { convert } from '@/lib/rates'
 
-/** Share of the budget at which the app starts warning. */
+/** Default share of the budget at which the app starts warning. */
 export const APPROACHING_THRESHOLD = 0.8
+/** The band the user is allowed to move the warning point within. */
+export const MIN_ALERT_THRESHOLD = 0.5
+export const MAX_ALERT_THRESHOLD = 1
 /** A price at or below target × this is flagged as a great deal. */
 export const GREAT_DEAL_FACTOR = 0.9
 
@@ -48,10 +51,20 @@ export function bestKnownPrice(product: Product): number {
   return product.estimatedPrice
 }
 
-export function budgetStatusFor(percentUsed: number): BudgetStatus {
+export function budgetStatusFor(
+  percentUsed: number,
+  threshold: number = APPROACHING_THRESHOLD,
+): BudgetStatus {
   if (percentUsed > 100) return 'over'
-  if (percentUsed >= APPROACHING_THRESHOLD * 100) return 'approaching'
+  const safe = clampThreshold(threshold)
+  if (percentUsed >= safe * 100) return 'approaching'
   return 'under'
+}
+
+/** Keeps a stored or typed threshold inside the usable band. */
+export function clampThreshold(value: number): number {
+  if (!Number.isFinite(value)) return APPROACHING_THRESHOLD
+  return Math.min(MAX_ALERT_THRESHOLD, Math.max(MIN_ALERT_THRESHOLD, value))
 }
 
 export function computeTotals(
@@ -59,6 +72,7 @@ export function computeTotals(
   budget: number,
   currency: Currency = 'AED',
   rates?: ExchangeRates,
+  alertThreshold: number = APPROACHING_THRESHOLD,
 ): BudgetTotals {
   let estimatedTotal = 0
   let actualTotal = 0
@@ -106,14 +120,18 @@ export function computeTotals(
 
   const percentUsed = budget > 0 ? (actualTotal / budget) * 100 : actualTotal > 0 ? 100 : 0
 
+  const threshold = clampThreshold(alertThreshold)
+
   return {
     currency,
     budget,
+    alertThreshold: threshold,
+    alertAmount: roundMoney(budget * threshold, currency),
     estimatedTotal,
     actualTotal,
     remaining: roundMoney(budget - actualTotal, currency),
     percentUsed,
-    status: budgetStatusFor(percentUsed),
+    status: budgetStatusFor(percentUsed, threshold),
     projectedTotal,
     projectedRemaining: roundMoney(budget - projectedTotal, currency),
     purchasedCount,

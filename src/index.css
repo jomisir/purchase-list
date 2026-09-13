@@ -189,6 +189,17 @@
     }
   }
 
+  input[type='range'] {
+    /* The control is tall for a touch target; the track should not be. */
+    background: transparent;
+  }
+
+  input[type='range']:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 4px;
+    border-radius: 999px;
+  }
+
   dialog::backdrop {
     background: rgb(12 14 13 / 55%);
     backdrop-filter: blur(2px);

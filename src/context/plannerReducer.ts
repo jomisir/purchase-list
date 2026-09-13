@@ -9,7 +9,7 @@ import type {
 } from '@/types'
 import { createId } from '@/lib/id'
 import { isoDate, nowIso } from '@/lib/date'
-import { compareRecordDate } from '@/lib/calc'
+import { APPROACHING_THRESHOLD, clampThreshold, compareRecordDate } from '@/lib/calc'
 import { createSeedProducts, DEFAULT_BUDGET, DEFAULT_CURRENCY, SEED_VERSION } from '@/data/seed'
 import { convert, emptyRates, rebase } from '@/lib/rates'
 import { DATA_VERSION } from '@/lib/transfer'
@@ -43,6 +43,7 @@ export type PlannerAction =
   | { type: 'setRates'; rates: ExchangeRates }
   | { type: 'setRateOverride'; code: Currency; rate: number | null }
   | { type: 'setAutoRefreshRates'; enabled: boolean }
+  | { type: 'setAlertThreshold'; threshold: number }
   | { type: 'addProduct'; draft: ProductDraft; id?: string }
   | { type: 'updateProduct'; id: string; patch: Partial<Product> }
   | { type: 'deleteProduct'; id: string }
@@ -59,6 +60,7 @@ export function defaultSettings(): Settings {
     theme: 'system',
     rates: emptyRates(DEFAULT_CURRENCY),
     autoRefreshRates: true,
+    alertThreshold: APPROACHING_THRESHOLD,
   }
 }
 
@@ -241,6 +243,12 @@ export function plannerReducer(state: PlannerState, action: PlannerAction): Plan
 
     case 'setAutoRefreshRates':
       return { ...state, settings: { ...state.settings, autoRefreshRates: action.enabled } }
+
+    case 'setAlertThreshold':
+      return {
+        ...state,
+        settings: { ...state.settings, alertThreshold: clampThreshold(action.threshold) },
+      }
 
     case 'addProduct': {
       const timestamp = nowIso()

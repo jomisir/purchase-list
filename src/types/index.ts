@@ -108,6 +108,11 @@ export interface Settings {
   rates: ExchangeRates
   /** Refresh rates in the background when they go stale. */
   autoRefreshRates: boolean
+  /**
+   * Share of the budget at which the app starts warning, as a fraction.
+   * 0.8 means "tell me once I have spent 80%".
+   */
+  alertThreshold: number
 }
 
 export interface AppData {
@@ -127,6 +132,10 @@ export interface BudgetTotals {
   /** The currency every figure below is expressed in. */
   currency: Currency
   budget: number
+  /** The fraction of budget that triggers the warning state. */
+  alertThreshold: number
+  /** The amount that threshold works out to. */
+  alertAmount: number
   estimatedTotal: number
   actualTotal: number
   remaining: number

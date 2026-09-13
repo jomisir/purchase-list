@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  APPROACHING_THRESHOLD,
+  MAX_ALERT_THRESHOLD,
+  MIN_ALERT_THRESHOLD,
   bestKnownPrice,
   categoryTotals,
+  clampThreshold,
   budgetStatusFor,
   computeTotals,
   dealStatus,
@@ -336,5 +340,43 @@ describe('totals across several currencies', () => {
       rates,
     )
     expect(rows[0].estimated).toBeCloseTo(200, 2)
+  })
+})
+
+describe('the adjustable warning threshold', () => {
+  it('defaults to warning at 80%', () => {
+    expect(budgetStatusFor(79.9)).toBe('under')
+    expect(budgetStatusFor(80)).toBe('approaching')
+  })
+
+  it('moves the warning point when a threshold is given', () => {
+    expect(budgetStatusFor(55, 0.5)).toBe('approaching')
+    expect(budgetStatusFor(49, 0.5)).toBe('under')
+    expect(budgetStatusFor(90, 0.95)).toBe('under')
+    expect(budgetStatusFor(96, 0.95)).toBe('approaching')
+  })
+
+  it('still calls anything past the limit over budget, whatever the threshold', () => {
+    expect(budgetStatusFor(101, 0.5)).toBe('over')
+    expect(budgetStatusFor(101, 1)).toBe('over')
+  })
+
+  it('clamps a nonsense threshold into the usable band', () => {
+    expect(clampThreshold(0.1)).toBe(MIN_ALERT_THRESHOLD)
+    expect(clampThreshold(5)).toBe(MAX_ALERT_THRESHOLD)
+    expect(clampThreshold(Number.NaN)).toBe(APPROACHING_THRESHOLD)
+    expect(clampThreshold(0.75)).toBe(0.75)
+  })
+
+  it('reports the threshold and the amount it works out to', () => {
+    const totals = computeTotals([makeProduct()], 1000, 'AED', undefined, 0.6)
+    expect(totals.alertThreshold).toBe(0.6)
+    expect(totals.alertAmount).toBe(600)
+  })
+
+  it('drives the status the summary shows', () => {
+    const products = [makeProduct({ estimatedPrice: 600, purchased: true, actualPrice: 600 })]
+    expect(computeTotals(products, 1000, 'AED', undefined, 0.8).status).toBe('under')
+    expect(computeTotals(products, 1000, 'AED', undefined, 0.5).status).toBe('approaching')
   })
 })

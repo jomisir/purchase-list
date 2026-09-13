@@ -6,6 +6,7 @@ import { usePlanner, useTotals } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
 import { budgetStatusCopy, STATUS_TONE } from '@/components/BudgetSummary'
 import { Card, SectionHeading } from '@/components/ui/Card'
+import { BudgetLimiter } from '@/components/BudgetLimiter'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
 import { ProgressBar } from '@/components/ui/ProgressBar'
@@ -159,7 +160,15 @@ export function Budget() {
       ) : null}
 
       <section>
-        <SectionHeading title="Set your budget" hint="Saved instantly and kept after a refresh." />
+        <SectionHeading
+          title="Budget limiter"
+          hint="Drag to set the limit, and choose how early it warns you."
+        />
+        <BudgetLimiter totals={totals} />
+      </section>
+
+      <section>
+        <SectionHeading title="Or pick an amount" hint="Saved instantly and kept after a refresh." />
         <Card className="p-4 sm:p-5">
           <div className="flex flex-wrap gap-2">
             {QUICK_BUDGETS.map((amount) => {

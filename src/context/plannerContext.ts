@@ -17,6 +17,7 @@ export interface PlannerActions {
   setRates: (rates: ExchangeRates) => void
   setRateOverride: (code: Currency, rate: number | null) => void
   setAutoRefreshRates: (enabled: boolean) => void
+  setAlertThreshold: (threshold: number) => void
   refreshRates: () => Promise<{ ok: boolean; message: string }>
   addProduct: (draft: ProductDraft) => string
   updateProduct: (id: string, patch: Partial<Product>) => void
@@ -66,7 +67,14 @@ export function useTotals(): BudgetTotals {
   const { state } = usePlanner()
   const { products, settings } = state
   return useMemo(
-    () => computeTotals(products, settings.budget, settings.currency, settings.rates),
-    [products, settings.budget, settings.currency, settings.rates],
+    () =>
+      computeTotals(
+        products,
+        settings.budget,
+        settings.currency,
+        settings.rates,
+        settings.alertThreshold,
+      ),
+    [products, settings.budget, settings.currency, settings.rates, settings.alertThreshold],
   )
 }

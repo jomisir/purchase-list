@@ -11,6 +11,7 @@ import { CATEGORIES } from '@/types'
 import { DEFAULT_BUDGET, DEFAULT_CURRENCY, SEED_VERSION } from '@/data/seed'
 import { createId } from '@/lib/id'
 import { emptyRates } from '@/lib/rates'
+import { APPROACHING_THRESHOLD, clampThreshold } from '@/lib/calc'
 import { isKnownCurrency } from '@/lib/currency'
 import { isoDate, nowIso } from '@/lib/date'
 
@@ -190,6 +191,7 @@ function normalizeSettings(value: unknown): Settings {
     theme: theme === 'light' || theme === 'dark' || theme === 'system' ? theme : 'system',
     rates: normalizeRates(settings.rates, currency),
     autoRefreshRates: settings.autoRefreshRates !== false,
+    alertThreshold: clampThreshold(asFiniteNumber(settings.alertThreshold) ?? APPROACHING_THRESHOLD),
   }
 }
 

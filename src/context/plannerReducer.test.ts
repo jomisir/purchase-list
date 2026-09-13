@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createInitialData, initialState, plannerReducer, type PlannerState } from '@/context/plannerReducer'
 import { computeTotals } from '@/lib/calc'
 import { makeProduct } from '@/lib/testUtils'
+import { parseImport, serializeExport } from '@/lib/transfer'
 import type { ProductDraft } from '@/context/plannerReducer'
 
 function hydrated(products = [makeProduct()]): PlannerState {
@@ -335,5 +336,28 @@ describe('logging a price in another currency', () => {
     )
     expect(state.products[0].priceHistory[0].currency).toBe('USD')
     expect(state.products[0].currentPrice).toBe(42)
+  })
+})
+
+describe('the warning threshold setting', () => {
+  it('stores a new threshold', () => {
+    const state = plannerReducer(hydrated(), { type: 'setAlertThreshold', threshold: 0.6 })
+    expect(state.settings.alertThreshold).toBe(0.6)
+  })
+
+  it('refuses to store one outside the usable band', () => {
+    expect(
+      plannerReducer(hydrated(), { type: 'setAlertThreshold', threshold: 2 }).settings.alertThreshold,
+    ).toBe(1)
+    expect(
+      plannerReducer(hydrated(), { type: 'setAlertThreshold', threshold: 0 }).settings.alertThreshold,
+    ).toBe(0.5)
+  })
+
+  it('survives an export and import round trip', () => {
+    const state = plannerReducer(hydrated(), { type: 'setAlertThreshold', threshold: 0.65 })
+    const { hydrated: _drop, ...data } = state
+    const restored = parseImport(serializeExport(data))
+    expect(restored.data.settings.alertThreshold).toBe(0.65)
   })
 })
