@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img">
+  <defs>
+    <linearGradient id="skDeck" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1f4e63"/><stop offset="50%" stop-color="#0f766e"/><stop offset="100%" stop-color="#1f4e63"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="258" rx="128" ry="10" fill="#171614" opacity=".08"/>
+  <g transform="rotate(-8 200 160)">
+    <path d="M44 152c0-16 12-28 28-28h256c16 0 28 12 28 28s-12 28-28 28H72c-16 0-28-12-28-28Z" fill="url(#skDeck)"/>
+    <path d="M44 152c0-16 12-28 28-28h256c16 0 28 12 28 28H44Z" fill="#ffffff" opacity=".12"/>
+    <g fill="#e3a857" opacity=".9">
+      <circle cx="150" cy="152" r="9"/><circle cx="250" cy="152" r="9"/>
+    </g>
+    <g fill="#0b3a48" opacity=".45">
+      <circle cx="112" cy="140" r="4"/><circle cx="112" cy="164" r="4"/>
+      <circle cx="136" cy="140" r="4"/><circle cx="136" cy="164" r="4"/>
+      <circle cx="264" cy="140" r="4"/><circle cx="264" cy="164" r="4"/>
+      <circle cx="288" cy="140" r="4"/><circle cx="288" cy="164" r="4"/>
+    </g>
+    <g fill="#9aa0a6">
+      <path d="M110 180h40l16 24h-72l16-24Z"/><path d="M250 180h40l16 24h-72l16-24Z"/>
+    </g>
+    <g>
+      <circle cx="108" cy="212" r="18" fill="#f1efe9"/><circle cx="108" cy="212" r="7" fill="#b9b5ad"/>
+      <circle cx="168" cy="212" r="18" fill="#f1efe9"/><circle cx="168" cy="212" r="7" fill="#b9b5ad"/>
+      <circle cx="248" cy="212" r="18" fill="#f1efe9"/><circle cx="248" cy="212" r="7" fill="#b9b5ad"/>
+      <circle cx="308" cy="212" r="18" fill="#f1efe9"/><circle cx="308" cy="212" r="7" fill="#b9b5ad"/>
+    </g>
+  </g>
+</svg>

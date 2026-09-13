@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img">
+  <ellipse cx="200" cy="274" rx="58" ry="8" fill="#171614" opacity=".08"/>
+  <g fill="#b9bec4">
+    <rect x="172" y="26" width="56" height="18" rx="4"/><rect x="170" y="44" width="60" height="18" rx="4"/>
+    <rect x="172" y="62" width="56" height="18" rx="4"/><rect x="170" y="80" width="60" height="18" rx="4"/>
+    <rect x="172" y="204" width="56" height="18" rx="4"/><rect x="170" y="222" width="60" height="18" rx="4"/>
+    <rect x="172" y="240" width="56" height="18" rx="4"/><rect x="170" y="258" width="60" height="14" rx="4"/>
+  </g>
+  <g fill="#9aa0a6" opacity=".6">
+    <rect x="172" y="42" width="56" height="3"/><rect x="172" y="60" width="56" height="3"/><rect x="172" y="78" width="56" height="3"/>
+    <rect x="172" y="220" width="56" height="3"/><rect x="172" y="238" width="56" height="3"/><rect x="172" y="256" width="56" height="3"/>
+  </g>
+  <circle cx="200" cy="150" r="70" fill="#cfd4d9"/>
+  <circle cx="200" cy="150" r="62" fill="#e8ebee"/>
+  <circle cx="200" cy="150" r="55" fill="#fbfbfa"/>
+  <g stroke="#2b3036" stroke-width="3" stroke-linecap="round">
+    <path d="M200 102v9"/><path d="M200 189v9"/><path d="M152 150h9"/><path d="M239 150h9"/>
+  </g>
+  <g stroke="#8b9199" stroke-width="2" stroke-linecap="round">
+    <path d="M234 116l-6 6"/><path d="M166 184l6-6"/><path d="M234 184l-6-6"/><path d="M166 116l6 6"/>
+  </g>
+  <path d="M200 150V116" stroke="#1f2429" stroke-width="5" stroke-linecap="round"/>
+  <path d="M200 150l26 16" stroke="#1f2429" stroke-width="4" stroke-linecap="round"/>
+  <path d="M200 150l-16 24" stroke="#b3261e" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="200" cy="150" r="4" fill="#1f2429"/>
+  <rect x="232" y="192" width="26" height="16" rx="4" fill="#fbfbfa" stroke="#c3c8cd" stroke-width="1.5"/>
+  <text x="245" y="204" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#4a5057">13</text>
+  <rect x="268" y="142" width="10" height="16" rx="3" fill="#b9bec4"/>
+  <text x="200" y="132" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" font-weight="700" fill="#6a7078" letter-spacing="2">CASIO</text>
+</svg>

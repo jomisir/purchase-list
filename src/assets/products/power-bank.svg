@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img">
+  <defs>
+    <linearGradient id="pbBody" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2f3338"/><stop offset="55%" stop-color="#1d2124"/><stop offset="100%" stop-color="#33383d"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="264" rx="98" ry="10" fill="#171614" opacity=".08"/>
+  <rect x="108" y="52" width="150" height="200" rx="26" fill="url(#pbBody)"/>
+  <rect x="116" y="60" width="134" height="184" rx="20" fill="none" stroke="#4a5057" stroke-width="1.5"/>
+  <g>
+    <circle cx="183" cy="146" r="49" fill="none" stroke="#596169" stroke-width="8" stroke-dasharray="3 7" stroke-linecap="round"/>
+    <circle cx="183" cy="146" r="33" fill="#262b2f"/>
+    <path d="M188 128l-14 22h11l-4 18 15-23h-11l3-17Z" fill="#3fb9a8"/>
+  </g>
+  <g fill="#3fb9a8">
+    <rect x="140" y="222" width="12" height="5" rx="2.5"/>
+    <rect x="158" y="222" width="12" height="5" rx="2.5"/>
+    <rect x="176" y="222" width="12" height="5" rx="2.5"/>
+    <rect x="194" y="222" width="12" height="5" rx="2.5" opacity=".3"/>
+  </g>
+  <rect x="252" y="120" width="34" height="52" rx="10" fill="#2b3035"/>
+  <rect x="258" y="136" width="22" height="10" rx="5" fill="#101214"/>
+  <text x="140" y="88" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#8f979e" letter-spacing="1">20 000 mAh</text>
+</svg>

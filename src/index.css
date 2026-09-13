@@ -1,0 +1,268 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Design tokens. Every colour used by a component resolves through one of the
+   semantic variables below, so the dark theme only has to redefine values here.
+   --------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  --bg: #f4f2ef;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f7f5f2;
+  --surface-sunken: #eceae5;
+  --border: #e4e0d9;
+  --border-strong: #cfc9bf;
+
+  --ink: #1b1a17;
+  --ink-soft: #55524b;
+  --ink-muted: #6b665e;
+  --ink-faint: #706a60;
+
+  --brand: #0f766e;
+  --brand-strong: #0b5a54;
+  --on-brand: #ffffff;
+  --brand-soft: #e3f2ef;
+  --brand-ink: #0b5a54;
+
+  --gold: #a9761f;
+  --gold-ink: #815612;
+  --gold-soft: #fbf1dd;
+
+  --image-panel: #f1efea;
+  --image-panel-line: #e4e0d9;
+  --image-panel-ink: #5f5b53;
+
+  --positive: #14724a;
+  --positive-soft: #e2f4ea;
+  --caution: #95590a;
+  --caution-soft: #fcefdc;
+  --negative: #b3261e;
+  --negative-soft: #fbe9e7;
+
+  --elevation-1: 0 1px 2px rgb(23 22 17 / 4%), 0 10px 26px -18px rgb(23 22 17 / 30%);
+  --elevation-2: 0 2px 6px rgb(23 22 17 / 6%), 0 24px 48px -24px rgb(23 22 17 / 35%);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --bg: #101211;
+  --bg-elevated: #191c1b;
+  --surface: #191c1b;
+  --surface-muted: #1f2322;
+  --surface-sunken: #141716;
+  --border: #2c3130;
+  --border-strong: #3d4341;
+
+  --ink: #f2f1ee;
+  --ink-soft: #c6c9c6;
+  --ink-muted: #a3a9a6;
+  --ink-faint: #9aa19e;
+
+  --brand: #3fb9a8;
+  --brand-strong: #63cdbd;
+  --on-brand: #06211e;
+  --brand-soft: #16302c;
+  --brand-ink: #8fded1;
+
+  --gold: #e0ae5b;
+  --gold-ink: #e0ae5b;
+  --gold-soft: #322616;
+
+  --image-panel: #dedbd4;
+  --image-panel-line: #c9c5bd;
+  --image-panel-ink: #59554e;
+
+  --positive: #4cc38a;
+  --positive-soft: #12291f;
+  --caution: #e3a857;
+  --caution-soft: #2e2314;
+  --negative: #f2837a;
+  --negative-soft: #331b19;
+
+  --elevation-1: 0 1px 2px rgb(0 0 0 / 30%), 0 10px 26px -18px rgb(0 0 0 / 70%);
+  --elevation-2: 0 2px 6px rgb(0 0 0 / 40%), 0 24px 48px -24px rgb(0 0 0 / 80%);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-line: var(--border);
+  --color-line-strong: var(--border-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-on-brand: var(--on-brand);
+
+  --color-gold: var(--gold);
+  --color-gold-ink: var(--gold-ink);
+  --color-gold-soft: var(--gold-soft);
+  --color-image-panel: var(--image-panel);
+  --color-image-panel-line: var(--image-panel-line);
+  --color-image-panel-ink: var(--image-panel-ink);
+
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-caution: var(--caution);
+  --color-caution-soft: var(--caution-soft);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+
+  --radius-card: 1.25rem;
+  --shadow-card: var(--elevation-1);
+  --shadow-pop: var(--elevation-2);
+
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Money and other figures line up in columns. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* iOS zooms the page when a field smaller than 16px gets focus. */
+  @media (max-width: 767px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  dialog::backdrop {
+    background: rgb(12 14 13 / 55%);
+    backdrop-filter: blur(2px);
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 0.18s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.22s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.16s ease-out both;
+}

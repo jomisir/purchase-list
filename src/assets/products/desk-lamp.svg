@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img">
+  <defs>
+    <linearGradient id="lampBeam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe6a8" stop-opacity=".75"/><stop offset="100%" stop-color="#ffe6a8" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="268" rx="100" ry="10" fill="#171614" opacity=".07"/>
+  <path d="M118 106h132l68 152H70l48-152Z" fill="url(#lampBeam)"/>
+  <rect x="96" y="248" width="184" height="16" rx="8" fill="#3b4147"/>
+  <rect x="104" y="240" width="168" height="10" rx="5" fill="#4d545b"/>
+  <rect x="178" y="128" width="14" height="118" rx="7" fill="#4d545b"/>
+  <rect x="178" y="128" width="14" height="118" rx="7" fill="#2f353a" opacity=".35"/>
+  <g transform="rotate(-18 186 128)">
+    <rect x="180" y="60" width="12" height="74" rx="6" fill="#4d545b"/>
+  </g>
+  <circle cx="186" cy="128" r="11" fill="#2f353a"/>
+  <circle cx="164" cy="60" r="9" fill="#2f353a"/>
+  <g transform="rotate(14 164 60)">
+    <rect x="110" y="52" width="128" height="22" rx="11" fill="#3b4147"/>
+    <rect x="114" y="68" width="120" height="10" rx="5" fill="#ffe6a8"/>
+  </g>
+  <g fill="#6f767c">
+    <rect x="212" y="244" width="14" height="6" rx="3"/><rect x="234" y="244" width="14" height="6" rx="3"/>
+  </g>
+</svg>

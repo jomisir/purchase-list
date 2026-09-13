@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img">
+  <ellipse cx="200" cy="276" rx="66" ry="8" fill="#171614" opacity=".08"/>
+  <rect x="172" y="150" width="52" height="124" rx="22" fill="#2a2f34"/>
+  <rect x="180" y="162" width="36" height="60" rx="14" fill="#3a4046"/>
+  <circle cx="198" cy="240" r="11" fill="#1b1f23"/>
+  <circle cx="198" cy="240" r="5" fill="#6b7378"/>
+  <rect x="190" y="196" width="16" height="16" rx="4" fill="#d8d5cf"/>
+  <path d="M198 150V118a20 20 0 0 1 20-20h18" fill="none" stroke="#33383d" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="236" cy="98" r="16" fill="#41474d"/>
+  <circle cx="236" cy="98" r="7" fill="#22262a"/>
+  <g transform="rotate(-8 150 92)">
+    <rect x="104" y="42" width="94" height="102" rx="12" fill="#3a4046"/>
+    <rect x="110" y="48" width="82" height="90" rx="8" fill="#1b2b36"/>
+    <rect x="118" y="58" width="66" height="42" rx="5" fill="#2f5769" opacity=".75"/>
+    <circle cx="151" cy="79" r="12" fill="none" stroke="#7fd8c9" stroke-width="3"/>
+    <rect x="98" y="82" width="14" height="34" rx="6" fill="#2a2f34"/>
+    <rect x="190" y="82" width="14" height="34" rx="6" fill="#2a2f34"/>
+  </g>
+  <text x="182" y="268" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#8f979e" letter-spacing="1">OSMO</text>
+</svg>

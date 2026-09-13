@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img">
+  <defs>
+    <linearGradient id="swFace" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16323d"/><stop offset="100%" stop-color="#0a1a22"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="272" rx="62" ry="8" fill="#171614" opacity=".08"/>
+  <path d="M170 34h60l-6 62h-48l-6-62Z" fill="#2a2e33"/>
+  <path d="M176 266h48l6-62h-60l6 62Z" fill="#2a2e33"/>
+  <path d="M172 46h56l-2 22h-52l-2-22Z" fill="#3a4046" opacity=".8"/>
+  <circle cx="200" cy="150" r="76" fill="#41474d"/>
+  <circle cx="200" cy="150" r="70" fill="#23282d"/>
+  <circle cx="200" cy="150" r="62" fill="url(#swFace)"/>
+  <circle cx="200" cy="150" r="50" fill="none" stroke="#3fb9a8" stroke-width="7" stroke-linecap="round" stroke-dasharray="235 314" transform="rotate(-90 200 150)"/>
+  <circle cx="200" cy="150" r="38" fill="none" stroke="#e3a857" stroke-width="7" stroke-linecap="round" stroke-dasharray="150 239" transform="rotate(-90 200 150)"/>
+  <text x="200" y="146" text-anchor="middle" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#f2f1ee">10:42</text>
+  <text x="200" y="168" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#7fd8c9" letter-spacing="1">8 240</text>
+  <rect x="272" y="132" width="12" height="20" rx="5" fill="#4a5057"/>
+  <rect x="272" y="160" width="12" height="16" rx="5" fill="#4a5057"/>
+</svg>

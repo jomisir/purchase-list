@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img">
+  <defs>
+    <linearGradient id="pmY" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3c7d6"/><stop offset="50%" stop-color="#e59ab7"/><stop offset="100%" stop-color="#f6d6e2"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="270" rx="62" ry="9" fill="#171614" opacity=".09"/>
+  <circle cx="200" cy="52" r="24" fill="#d8ad54"/>
+  <circle cx="200" cy="52" r="15" fill="#eccb85"/>
+  <rect x="190" y="72" width="20" height="16" fill="#c2a06a"/>
+  <path d="M200 92c44 0 72 34 72 82s-30 88-72 88-72-40-72-88 28-82 72-82Z" fill="url(#pmY)"/>
+  <ellipse cx="176" cy="146" rx="20" ry="30" fill="#ffffff" opacity=".45"/>
+  <text x="200" y="196" text-anchor="middle" font-family="system-ui, sans-serif" font-size="26" font-weight="700" fill="#9a5372" letter-spacing="4">YARA</text>
+  <text x="200" y="218" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" font-weight="600" fill="#b0708c" letter-spacing="3">LATTAFA</text>
+</svg>

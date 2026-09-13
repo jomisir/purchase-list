@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img">
+  <defs>
+    <linearGradient id="wbBody" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1f6f86"/><stop offset="35%" stop-color="#2e93af"/><stop offset="100%" stop-color="#175a70"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="270" rx="86" ry="9" fill="#171614" opacity=".08"/>
+  <g transform="translate(96 0)">
+    <rect x="26" y="28" width="52" height="26" rx="10" fill="#2b3036"/>
+    <rect x="20" y="50" width="64" height="20" rx="8" fill="#3b4147"/>
+    <path d="M12 84c0-10 8-18 18-18h44c10 0 18 8 18 18v158c0 14-11 24-25 24H37c-14 0-25-10-25-24V84Z" fill="url(#wbBody)"/>
+    <path d="M24 92c0-4 3-8 8-8v152c-5 0-8-4-8-8V92Z" fill="#ffffff" opacity=".25"/>
+    <rect x="22" y="140" width="64" height="52" rx="8" fill="#0d4d61" opacity=".45"/>
+    <path d="M54 150c9 12 14 19 14 25a14 14 0 1 1-28 0c0-6 5-13 14-25Z" fill="#a8dbe8"/>
+    <path d="M64 42h-24" stroke="#5a6168" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(228 66)">
+    <rect x="18" y="0" width="34" height="18" rx="7" fill="#b9bec4"/>
+    <path d="M8 24c0-6 5-10 11-10h32c6 0 11 4 11 10v134c0 12-9 22-21 22H29c-12 0-21-10-21-22V24Z" fill="#e7e4dd"/>
+    <path d="M16 34c0-3 2-6 5-6v128c-3 0-5-3-5-6V34Z" fill="#ffffff" opacity=".7"/>
+    <rect x="14" y="76" width="48" height="44" rx="7" fill="#0f766e" opacity=".18"/>
+    <text x="38" y="104" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#4c6d68">1 L</text>
+  </g>
+</svg>
