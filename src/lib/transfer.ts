@@ -11,7 +11,7 @@ import { CATEGORIES } from '@/types'
 import { DEFAULT_CURRENCY, SEED_VERSION } from '@/data/seed'
 import { createId } from '@/lib/id'
 import { emptyRates } from '@/lib/rates'
-import { migrateToLists } from '@/lib/lists'
+import { MAX_LISTS, migrateToLists } from '@/lib/lists'
 import { APPROACHING_THRESHOLD, clampThreshold } from '@/lib/calc'
 import { isKnownCurrency } from '@/lib/currency'
 import { isoDate, nowIso } from '@/lib/date'
@@ -255,6 +255,76 @@ export function buildExport(data: AppData): ExportFile {
 
 export function serializeExport(data: AppData): string {
   return JSON.stringify(buildExport(data), null, 2)
+}
+
+/** A name that is not already taken, so two tabs are never ambiguous. */
+function uniqueName(name: string, taken: Set<string>): string {
+  if (!taken.has(name)) return name
+  for (let suffix = 2; suffix < 100; suffix += 1) {
+    const candidate = `${name} (${suffix})`
+    if (!taken.has(candidate)) return candidate
+  }
+  return `${name} (${createId('list')})`
+}
+
+export interface MergeResult {
+  data: AppData
+  addedLists: number
+  addedProducts: number
+}
+
+/**
+ * Adds an imported file's lists alongside what is already here, rather than
+ * replacing it. Everything imported gets fresh ids, so importing the same file
+ * twice makes a second copy instead of silently overwriting the first — and a
+ * name already in use is numbered rather than duplicated.
+ *
+ * The settings of the file being imported are ignored: currency, appearance and
+ * rates belong to the device doing the importing.
+ */
+export function mergeAppData(current: AppData, incoming: AppData): MergeResult {
+  if (current.lists.length + incoming.lists.length > MAX_LISTS) {
+    throw new ImportError(
+      `Adding ${incoming.lists.length} list${incoming.lists.length === 1 ? '' : 's'} would take you past the limit of ${MAX_LISTS}. Delete a list first, then import again.`,
+    )
+  }
+
+  const takenNames = new Set(current.lists.map((list) => list.name))
+  const takenProductIds = new Set(current.products.map((product) => product.id))
+
+  // Old list id -> the id it is given here.
+  const remapped = new Map<string, string>()
+  const lists = incoming.lists.map((list) => {
+    const id = createId('list')
+    remapped.set(list.id, id)
+    const name = uniqueName(list.name, takenNames)
+    takenNames.add(name)
+    return { ...list, id, name }
+  })
+
+  const products = incoming.products.map((product) => {
+    const listId = remapped.get(product.listId) ?? lists[0]?.id ?? current.activeListId
+    const id = takenProductIds.has(product.id) ? createId('product') : product.id
+    takenProductIds.add(id)
+    return {
+      ...product,
+      id,
+      listId,
+      priceHistory: product.priceHistory.map((record) => ({ ...record, productId: id })),
+    }
+  })
+
+  return {
+    data: {
+      ...current,
+      lists: [...current.lists, ...lists],
+      // Land on what was just imported — that is what you came to look at.
+      activeListId: lists[0]?.id ?? current.activeListId,
+      products: [...current.products, ...products],
+    },
+    addedLists: lists.length,
+    addedProducts: products.length,
+  }
 }
 
 export interface ImportResult {

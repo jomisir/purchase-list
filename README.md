@@ -44,6 +44,10 @@ mall basement. Everything is stored on your own device; nothing is uploaded.
 - **Settings** — your lists, appearance, JSON export/import, reset to the
   starter plan. The "Your data" figures there deliberately count every list,
   unlike the rest of the app, which shows the list you have open.
+- **Import, two ways** — *Add a file to my lists* puts an export's lists beside
+  what you already have, keeping both; *Restore a backup* replaces everything.
+  Anything added gets fresh ids and a numbered name if one is taken, so the same
+  file twice makes a second copy rather than silently overwriting the first.
 - **Dark mode** — a switch on the dashboard, plus a three-way choice (system /
   light / dark) in Settings. The switch shows what you are actually looking at,
   so while the device is still in charge it is marked "Auto".
@@ -171,6 +175,16 @@ Three rules hold the structure together:
    `PersistenceAdapter` (`load` / `save` / `clear`). IndexedDB is the default,
    localStorage the fallback, in-memory the last resort.
 
+### A list before it has a budget
+
+A budget is a decision, and a list can exist before you have made it — an
+imported one, or a new one set to zero. The app treats `budget <= 0` as *not set
+yet*: the status chip reads "No budget set" instead of congratulating you for
+being under a budget of nothing, or shouting "over budget" the moment you buy
+anything; the progress bar stays empty and neutral; and the shell says "No budget
+set" rather than "AED 0 left", which reads as no money left. Set one and the
+ordinary under / approaching / over behaviour returns.
+
 ### How several lists are stored
 
 `products` stays a single flat array; each product carries the `listId` of the
@@ -242,13 +256,15 @@ async and the state shape (`AppData`) maps directly to `products`,
 
 ## Testing
 
-`npm test` runs 154 unit tests covering budget totals, deal thresholds, price
+`npm test` runs 164 unit tests covering budget totals, deal thresholds, price
 statistics, store comparison, search/sort/filter, every reducer action, the
 import/export round trip, URL validation, currency formatting and rounding,
 rate conversion and re-basing, provider racing and failure, the cumulative
 spending series (gap filling, conversion, quantity, missing timestamps),
 creating/renaming/deleting/switching lists and migrating older data into them,
-and the integrity of the seed catalogue (no duplicates, one smartwatch, targets inside their stated
+merging an imported file alongside existing lists (fresh ids, numbered names,
+history staying attached, the list limit), and the integrity of the seed
+catalogue (no duplicates, one smartwatch, targets inside their stated
 ranges, and an estimated total that adds up to the products themselves).
 
 The UI was additionally driven end-to-end with Playwright across the acceptance
@@ -261,7 +277,10 @@ The list feature got the same treatment: creating a list, switching between
 them, per-list budgets and totals, moving a product across, renaming, the guard
 that refuses to delete your last list, survival across a reload, and loading a
 database written by the pre-lists version to confirm its products and budget
-come back intact.
+come back intact. Importing was driven the same way — a real file added beside
+an existing plan with a purchase already recorded in it, imported twice to
+confirm copies rather than overwrites, and once more to confirm the list limit
+refuses cleanly instead of half-importing.
 
 The installable behaviour was verified the same way: manifest and every icon
 resolve, the service worker registers and takes control, the precache fills, and

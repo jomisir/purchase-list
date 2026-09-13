@@ -4,7 +4,7 @@ import { formatMoney, formatPercent, parsePrice } from '@/lib/money'
 import { cx } from '@/lib/cx'
 import { useBudget, usePlanner, useProducts, useTotals } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
-import { budgetStatusCopy, STATUS_TONE } from '@/components/BudgetSummary'
+import { budgetBar, budgetStatusCopy } from '@/components/BudgetSummary'
 import { Card, SectionHeading } from '@/components/ui/Card'
 import { BudgetLimiter } from '@/components/BudgetLimiter'
 import { Button } from '@/components/ui/Button'
@@ -62,6 +62,7 @@ export function Budget() {
   }, [budget])
 
   const status = budgetStatusCopy(totals)
+  const bar = budgetBar(totals)
 
   function applyCustom(event: React.FormEvent) {
     event.preventDefault()
@@ -94,11 +95,7 @@ export function Budget() {
           </p>
 
           <div className="mt-4">
-            <ProgressBar
-              value={totals.percentUsed}
-              tone={STATUS_TONE[totals.status]}
-              label={`${formatPercent(totals.percentUsed)} of budget spent`}
-            />
+            <ProgressBar value={bar.value} tone={bar.tone} label={bar.label} />
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
               <span
                 className={cx(

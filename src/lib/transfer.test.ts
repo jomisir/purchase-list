@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { ImportError, normalizeProduct, parseImport, serializeExport } from '@/lib/transfer'
+import {
+  ImportError,
+  mergeAppData,
+  normalizeProduct,
+  parseImport,
+  serializeExport,
+} from '@/lib/transfer'
 import { createInitialData } from '@/context/plannerReducer'
 import { makeProduct, makeRecord } from '@/lib/testUtils'
 
@@ -118,5 +124,102 @@ describe('normalizeProduct', () => {
     })
     expect(product?.priceHistory).toHaveLength(1)
     expect(product?.priceHistory[0].date).toBe('2026-09-01')
+  })
+})
+
+
+describe('adding an imported file alongside what is already here', () => {
+  /** A tiny second file: one list, two products. */
+  function incoming(name = 'Dad') {
+    const base = createInitialData()
+    const list = { ...base.lists[0], id: 'list-incoming', name, budget: 0 }
+    return {
+      ...base,
+      lists: [list],
+      activeListId: list.id,
+      products: [
+        makeProduct({ id: 'p-a', listId: list.id, name: 'Warm tracksuits', quantity: 2 }),
+        makeProduct({ id: 'p-b', listId: list.id, name: "Men's watch" }),
+      ],
+    }
+  }
+
+  it('keeps the existing lists and adds the new one beside them', () => {
+    const current = createInitialData()
+    const before = current.products.length
+    const result = mergeAppData(current, incoming())
+
+    expect(result.addedLists).toBe(1)
+    expect(result.addedProducts).toBe(2)
+    expect(result.data.lists).toHaveLength(2)
+    expect(result.data.lists[0].id).toBe(current.lists[0].id)
+    expect(result.data.lists[1].name).toBe('Dad')
+    expect(result.data.products).toHaveLength(before + 2)
+  })
+
+  it('opens the list that was just imported', () => {
+    const result = mergeAppData(createInitialData(), incoming())
+    expect(result.data.activeListId).toBe(result.data.lists[1].id)
+  })
+
+  it('rehomes the imported products onto their new list', () => {
+    const result = mergeAppData(createInitialData(), incoming())
+    const added = result.data.products.filter((p) => p.listId === result.data.lists[1].id)
+    expect(added.map((p) => p.name).sort()).toEqual(["Men's watch", 'Warm tracksuits'])
+    expect(added.find((p) => p.name === 'Warm tracksuits')?.quantity).toBe(2)
+  })
+
+  it('keeps the device’s own currency and appearance, not the file’s', () => {
+    const current = {
+      ...createInitialData(),
+      settings: { ...createInitialData().settings, currency: 'EUR', theme: 'dark' as const },
+    }
+    const file = {
+      ...incoming(),
+      settings: { ...createInitialData().settings, currency: 'JPY', theme: 'light' as const },
+    }
+    const result = mergeAppData(current, file)
+    expect(result.data.settings.currency).toBe('EUR')
+    expect(result.data.settings.theme).toBe('dark')
+  })
+
+  it('numbers a name that is already taken instead of showing two identical tabs', () => {
+    const first = mergeAppData(createInitialData(), incoming())
+    const second = mergeAppData(first.data, incoming())
+    expect(second.data.lists.map((list) => list.name)).toEqual(['My list', 'Dad', 'Dad (2)'])
+  })
+
+  it('importing the same file twice makes a second copy rather than overwriting the first', () => {
+    const first = mergeAppData(createInitialData(), incoming())
+    const second = mergeAppData(first.data, incoming())
+    const ids = second.data.products.map((product) => product.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(second.data.products.filter((p) => p.name === 'Warm tracksuits')).toHaveLength(2)
+  })
+
+  it('keeps price history attached to the product it was copied onto', () => {
+    const file = incoming()
+    file.products[0] = makeProduct({
+      id: 'p-a',
+      listId: file.lists[0].id,
+      name: 'Sneakers',
+      priceHistory: [makeRecord({ productId: 'p-a', price: 220 })],
+    })
+    const current = { ...createInitialData(), products: [makeProduct({ id: 'p-a' })] }
+    const result = mergeAppData(current, file)
+    const moved = result.data.products.find((p) => p.name === 'Sneakers')
+    expect(moved).toBeDefined()
+    // Its id had to change to avoid the collision, and its history followed.
+    expect(moved?.id).not.toBe('p-a')
+    expect(moved?.priceHistory[0].productId).toBe(moved?.id)
+  })
+
+  it('refuses rather than silently dropping lists when it would pass the limit', () => {
+    let data = createInitialData()
+    for (let index = 0; index < 11; index += 1) {
+      data = mergeAppData(data, incoming(`List ${index}`)).data
+    }
+    expect(data.lists).toHaveLength(12)
+    expect(() => mergeAppData(data, incoming('One too many'))).toThrow(ImportError)
   })
 })

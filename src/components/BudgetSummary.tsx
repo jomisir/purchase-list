@@ -10,6 +10,26 @@ export const STATUS_TONE: Record<BudgetStatus, ProgressTone> = {
   over: 'negative',
 }
 
+/**
+ * How the progress bar should read. With no budget there is nothing to be a
+ * proportion of, so the bar stays empty and neutral rather than implying a
+ * percentage of zero.
+ */
+export function budgetBar(totals: BudgetTotals): {
+  value: number
+  tone: ProgressTone
+  label: string
+} {
+  if (totals.budget <= 0) {
+    return { value: 0, tone: 'brand', label: 'No budget set yet' }
+  }
+  return {
+    value: totals.percentUsed,
+    tone: STATUS_TONE[totals.status],
+    label: `${formatPercent(totals.percentUsed)} of budget spent`,
+  }
+}
+
 /** Status is never carried by colour alone — it always ships with a word and an icon. */
 export function budgetStatusCopy(totals: BudgetTotals): {
   label: string
@@ -17,6 +37,20 @@ export function budgetStatusCopy(totals: BudgetTotals): {
   icon: React.ReactNode
   className: string
 } {
+  // A list can exist before its budget does — an imported one, or a new one set
+  // to zero. Calling that "under budget" would be flattering nonsense, and
+  // "over budget" the moment anything is bought would be alarming nonsense.
+  if (totals.budget <= 0) {
+    return {
+      label: 'No budget set',
+      detail:
+        totals.actualTotal > 0
+          ? `${formatMoney(totals.actualTotal, totals.currency)} spent so far`
+          : 'Set one to track your spending',
+      icon: <IconInfo className="size-4" />,
+      className: 'bg-surface-muted text-ink-soft border-line-strong',
+    }
+  }
   if (totals.status === 'over') {
     return {
       label: 'Over budget',
@@ -72,6 +106,7 @@ function Figure({
 
 export function BudgetSummary({ totals }: { totals: BudgetTotals }) {
   const status = budgetStatusCopy(totals)
+  const bar = budgetBar(totals)
   return (
     <section
       aria-label="Budget summary"
@@ -92,13 +127,11 @@ export function BudgetSummary({ totals }: { totals: BudgetTotals }) {
         </div>
 
         <div className="mt-3">
-          <ProgressBar
-            value={totals.percentUsed}
-            tone={STATUS_TONE[totals.status]}
-            label={`${formatPercent(totals.percentUsed)} of budget spent`}
-          />
+          <ProgressBar value={bar.value} tone={bar.tone} label={bar.label} />
           <div className="mt-1.5 flex items-center justify-between text-[12px] text-ink-muted">
-            <span className="tnum font-semibold">{formatPercent(totals.percentUsed)} used</span>
+            <span className="tnum font-semibold">
+              {totals.budget > 0 ? `${formatPercent(totals.percentUsed)} used` : 'No budget set'}
+            </span>
             <span className="tnum">{status.detail}</span>
           </div>
         </div>

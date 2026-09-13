@@ -101,6 +101,25 @@ describe('computeTotals', () => {
   })
 })
 
+describe('a list with no budget yet', () => {
+  it('reports no spend as 0% rather than dividing by zero', () => {
+    const totals = computeTotals([makeProduct({ estimatedPrice: 240 })], 0)
+    expect(Number.isFinite(totals.percentUsed)).toBe(true)
+    expect(totals.percentUsed).toBe(0)
+    expect(totals.estimatedTotal).toBe(240)
+    expect(totals.remaining).toBe(0)
+  })
+
+  it('still adds up what was spent', () => {
+    const totals = computeTotals(
+      [makeProduct({ purchased: true, actualPrice: 120, estimatedPrice: 100 })],
+      0,
+    )
+    expect(totals.actualTotal).toBe(120)
+    expect(Number.isFinite(totals.percentUsed)).toBe(true)
+  })
+})
+
 describe('budget status thresholds', () => {
   it('warns from 80% and flags over budget past 100%', () => {
     expect(budgetStatusFor(79.9)).toBe('under')

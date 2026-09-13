@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import type { ThemePreference } from '@/types'
 import { formatMoney } from '@/lib/money'
 import { isoDate } from '@/lib/date'
-import { ImportError, parseImport, serializeExport } from '@/lib/transfer'
+import { ImportError, mergeAppData, parseImport, serializeExport } from '@/lib/transfer'
 import { cx } from '@/lib/cx'
 import { computeTotals } from '@/lib/calc'
 import { useCurrency, useLists, usePlanner } from '@/context/plannerContext'
@@ -36,6 +36,8 @@ export function Settings() {
   const toast = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  // Which button opened the file picker, read back when the file arrives.
+  const importMode = useRef<'merge' | 'replace'>('merge')
   const [confirmingReset, setConfirmingReset] = useState(false)
 
   const { lists } = useLists()
@@ -82,12 +84,19 @@ export function Settings() {
     try {
       const text = await file.text()
       const result = parseImport(text)
-      actions.replaceData(result.data)
-      toast.success(
-        result.skipped > 0
-          ? `Imported ${result.productCount} products (${result.skipped} skipped).`
-          : `Imported ${result.productCount} products.`,
-      )
+      const skipped = result.skipped > 0 ? ` (${result.skipped} skipped)` : ''
+
+      if (importMode.current === 'merge') {
+        const { hydrated: _hydrated, ...current } = state
+        const merged = mergeAppData(current, result.data)
+        actions.replaceData(merged.data)
+        toast.success(
+          `Added ${merged.addedLists} list${merged.addedLists === 1 ? '' : 's'} and ${merged.addedProducts} products${skipped}.`,
+        )
+      } else {
+        actions.replaceData(result.data)
+        toast.success(`Imported ${result.productCount} products${skipped}.`)
+      }
     } catch (error) {
       const message =
         error instanceof ImportError
@@ -258,15 +267,36 @@ export function Settings() {
               id="import-file"
               onChange={(event) => void handleImport(event.target.files?.[0])}
             />
-            <Button variant="secondary" size="lg" onClick={() => fileRef.current?.click()}>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => {
+                importMode.current = 'merge'
+                fileRef.current?.click()
+              }}
+            >
               <IconUpload className="size-4" />
-              Import JSON
+              Add a file to my lists
+            </Button>
+            <Button
+              variant="ghost"
+              size="lg"
+              onClick={() => {
+                importMode.current = 'replace'
+                fileRef.current?.click()
+              }}
+            >
+              <IconRefresh className="size-4" />
+              Restore a backup
             </Button>
           </div>
 
           <p className="text-[12.5px] leading-relaxed text-ink-muted">
-            An export contains every product, purchase, price record, price history entry, custom
-            product and your budget. Importing replaces what is currently in the app.
+            An export contains every list with its products, purchases, price records and budget.
+            <strong className="font-semibold text-ink-soft"> Add a file to my lists</strong> keeps
+            what you already have and puts the file&rsquo;s lists beside it.{' '}
+            <strong className="font-semibold text-ink-soft">Restore a backup</strong> replaces
+            everything in the app with the file.
           </p>
 
           {importError ? (

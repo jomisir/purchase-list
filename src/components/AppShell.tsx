@@ -65,6 +65,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation()
   const totals = useTotals()
   const title = PAGE_TITLES[location.pathname] ?? 'Shopping List'
+  // A list can have no budget yet. "AED 0 left" would read as no money left,
+  // which is the opposite of what it means.
+  const budgeted = totals.budget > 0
 
   return (
     <div className="min-h-dvh bg-bg">
@@ -111,10 +114,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <p
               className={cx(
                 'tnum mt-0.5 text-[17px] font-semibold',
-                totals.remaining < 0 ? 'text-negative' : 'text-ink',
+                budgeted && totals.remaining < 0 ? 'text-negative' : 'text-ink',
               )}
             >
-              {formatMoney(totals.remaining, totals.currency)}
+              {budgeted ? formatMoney(totals.remaining, totals.currency) : 'No budget set'}
             </p>
             <p className="tnum mt-0.5 text-[11.5px] text-ink-muted">
               {totals.purchasedCount}/{totals.totalCount} items bought
@@ -132,8 +135,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold tracking-tight text-ink">{title}</p>
             <p className="tnum truncate text-[11.5px] text-ink-muted">
-              {formatMoney(totals.remaining, totals.currency)} left · {totals.purchasedCount}/{totals.totalCount}{' '}
-              bought
+              {budgeted ? `${formatMoney(totals.remaining, totals.currency)} left` : 'No budget set'}{' '}
+              · {totals.purchasedCount}/{totals.totalCount} bought
             </p>
           </div>
           <ThemeToggle iconOnly />
