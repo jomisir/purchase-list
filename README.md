@@ -38,6 +38,9 @@ mall basement. Everything is stored on your own device; nothing is uploaded.
 - **Dark mode** — a switch on the dashboard, plus a three-way choice (system /
   light / dark) in Settings. The switch shows what you are actually looking at,
   so while the device is still in charge it is marked "Auto".
+- **Spending chart** — cumulative spend per day against the budget ceiling, with
+  a crosshair that scrubs the headline figure, keyboard stepping, and a table
+  view showing the same numbers.
 
 ### About the prices and rates
 
@@ -210,11 +213,12 @@ async and the state shape (`AppData`) maps directly to `products`,
 
 ## Testing
 
-`npm test` runs 113 unit tests covering budget totals, deal thresholds, price
+`npm test` runs 125 unit tests covering budget totals, deal thresholds, price
 statistics, store comparison, search/sort/filter, every reducer action, the
 import/export round trip, URL validation, currency formatting and rounding,
-rate conversion and re-basing, provider racing and failure, and the integrity of
-the seed catalogue (no duplicates, one smartwatch, targets inside their stated
+rate conversion and re-basing, provider racing and failure, the cumulative
+spending series (gap filling, conversion, quantity, missing timestamps), and the
+integrity of the seed catalogue (no duplicates, one smartwatch, targets inside their stated
 ranges, and an estimated total that adds up to the products themselves).
 
 The UI was additionally driven end-to-end with Playwright across the acceptance
@@ -229,6 +233,37 @@ with the network switched fully off the app still cold-starts, renders all 25
 products with their artwork, and records a new price. The iOS path was checked
 under an iPhone user agent to confirm it shows Share-sheet instructions instead
 of a button that would do nothing.
+
+## The spending chart
+
+One series (cumulative spend) plus one threshold (the budget), which is what the
+data's job asks for: change-over-time with a target. Specifics worth knowing:
+
+- **The budget is the ceiling.** When the budget is the larger number it becomes
+  the top of the y-scale exactly, so the threshold sits on the top gridline and
+  the data uses the full plot height rather than being squashed under a
+  rounded-up axis.
+- **Quiet days are drawn.** Days with no purchase are filled in, so a flat
+  stretch means "bought nothing that day" rather than the axis silently
+  compressing time.
+- **The readout replaces a floating tooltip.** Hovering or arrowing scrubs the
+  headline number and its caption instead of covering the plot — so the value is
+  readable without hovering at all, and nothing occludes the budget label.
+- **Identity does not rest on hue.** The budget line is dashed and directly
+  labelled; the spend line is solid with an end marker. They stay distinct in
+  greyscale, under colour-vision deficiency, and in forced-colors.
+- **A table view is the twin.** Same days, same running totals, plus what was
+  bought each day.
+
+On colour: the chart uses the app's own brand teal and gold tokens. Run through
+the dataviz validator, the checks that decide whether two marks can be told apart
+pass comfortably in both themes — CVD separation ΔE 11.7 light / 10.4 dark
+against a target of 8, normal-vision ΔE 19, contrast ≥3:1. Two structural checks
+calibrated for multi-series categorical palettes do fail (the light teal's chroma
+sits at 0.086 against a 0.10 floor; the dark steps sit above the dark lightness
+band), and every on-brand teal fails them the same way — passing would mean
+leaving the brand hue for a blue. The secondary encoding above is the remedy the
+validator itself prescribes.
 
 ## A note on the name
 

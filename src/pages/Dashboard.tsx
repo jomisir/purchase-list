@@ -9,6 +9,7 @@ import { useProductDialogs } from '@/hooks/useProductDialogs'
 import { BudgetSummary } from '@/components/BudgetSummary'
 import { InstallHint } from '@/components/InstallHint'
 import { DarkModeSwitch } from '@/components/DarkModeSwitch'
+import { SpendingChart } from '@/components/SpendingChart'
 import { ProductCard } from '@/components/ProductCard'
 import { ProductImage } from '@/components/ProductImage'
 import { DealBadge } from '@/components/DealBadge'
@@ -105,6 +106,8 @@ export function Dashboard() {
       <InstallHint />
 
       <BudgetSummary totals={totals} />
+
+      <SpendingChart />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Card className="p-4 sm:p-5">
