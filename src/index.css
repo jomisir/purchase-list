@@ -200,6 +200,36 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
+  /* Launched from the home screen the page runs edge to edge, so sticky bars
+     have to keep clear of the status bar and the home indicator themselves. */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Page gutters that also clear a landscape notch. Written as one rule per
+     property so they never collide with a plain px-* utility. */
+  .px-gutter {
+    padding-left: max(1rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  }
+
+  @media (min-width: 40rem) {
+    .px-gutter {
+      padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
+      padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
+    }
+  }
+
+  .px-gutter-tight {
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
+  .px-inset {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
   .mb-safe {
     margin-bottom: env(safe-area-inset-bottom, 0px);
   }

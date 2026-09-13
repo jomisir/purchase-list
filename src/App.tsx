@@ -4,6 +4,7 @@ import { PlannerProvider } from '@/context/PlannerProvider'
 import { usePlanner } from '@/context/plannerContext'
 import { ToastProvider } from '@/components/ui/Toast'
 import { ThemeManager } from '@/components/ThemeManager'
+import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { AppShell } from '@/components/AppShell'
 import { Dashboard } from '@/pages/Dashboard'
 import { ShoppingList } from '@/pages/ShoppingList'
@@ -69,6 +70,7 @@ export default function App() {
           <ScrollToTop />
           <Shell />
         </HashRouter>
+        <UpdatePrompt />
       </ToastProvider>
     </PlannerProvider>
   )

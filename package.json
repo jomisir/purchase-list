@@ -6,8 +6,10 @@
   "description": "A personal shopping planner for a Dubai trip: checklist, budget, price tracking and store comparison.",
   "scripts": {
     "dev": "vite",
+    "dev:lan": "vite --host",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "preview:lan": "vite preview --host",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit false --emitDeclarationOnly false"

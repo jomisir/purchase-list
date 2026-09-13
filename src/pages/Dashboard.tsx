@@ -7,6 +7,7 @@ import { cx } from '@/lib/cx'
 import { usePlanner } from '@/context/plannerContext'
 import { useProductDialogs } from '@/hooks/useProductDialogs'
 import { BudgetSummary } from '@/components/BudgetSummary'
+import { InstallHint } from '@/components/InstallHint'
 import { ProductCard } from '@/components/ProductCard'
 import { ProductImage } from '@/components/ProductImage'
 import { DealBadge } from '@/components/DealBadge'
@@ -94,6 +95,8 @@ export function Dashboard() {
           Everything you planned to buy in Dubai, and what it is costing you.
         </p>
       </header>
+
+      <InstallHint />
 
       <BudgetSummary totals={totals} />
 

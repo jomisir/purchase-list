@@ -153,7 +153,7 @@ export function ShoppingMode() {
 
   return (
     <div className="min-h-dvh bg-bg">
-      <header className="sticky top-0 z-30 border-b border-line bg-bg/95 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-line bg-bg/95 backdrop-blur-md pt-safe px-inset">
         <div className="mx-auto w-full max-w-3xl px-3 pt-2.5 pb-2">
           <div className="flex items-center gap-2">
             <Link
@@ -231,7 +231,7 @@ export function ShoppingMode() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl px-3 pt-3 pb-28">
+      <main className="mx-auto w-full max-w-3xl px-gutter-tight pt-3 pb-28">
         {visible.length === 0 ? (
           <EmptyState
             icon={hideBought ? <IconCheck className="size-6" /> : <IconSearch className="size-6" />}
@@ -262,7 +262,7 @@ export function ShoppingMode() {
         )}
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md pb-safe">
+      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur-md pb-safe px-inset">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-4 py-3">
           <div>
             <p className="text-[10.5px] font-semibold tracking-[0.08em] text-ink-faint uppercase">

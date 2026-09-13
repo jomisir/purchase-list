@@ -1,0 +1,45 @@
+{
+  "id": "dubai-shopping-planner",
+  "name": "Dubai Shopping Planner",
+  "short_name": "Dubai Shop",
+  "description": "Your Dubai shopping checklist, budget and price tracker — works offline, data stays on your phone.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#f4f2ef",
+  "theme_color": "#0f766e",
+  "orientation": "any",
+  "categories": ["shopping", "productivity", "finance"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Shopping Mode",
+      "short_name": "Shop",
+      "description": "The simplified in-store view",
+      "url": "./#/shopping",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Add Product",
+      "short_name": "Add",
+      "description": "Add something you just found",
+      "url": "./#/add",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Price Tracker",
+      "short_name": "Prices",
+      "description": "Log a price you just saw",
+      "url": "./#/prices",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

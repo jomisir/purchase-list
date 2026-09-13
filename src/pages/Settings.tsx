@@ -8,6 +8,7 @@ import { cx } from '@/lib/cx'
 import { usePlanner } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
 import { Card, SectionHeading } from '@/components/ui/Card'
+import { InstallPanel } from '@/components/InstallPanel'
 import { Button } from '@/components/ui/Button'
 import {
   IconAlert,
@@ -99,6 +100,14 @@ export function Settings() {
           <p className="text-[13px] leading-relaxed text-ink-soft">{storageError}</p>
         </Card>
       ) : null}
+
+      <section>
+        <SectionHeading
+          title="Install on your phone"
+          hint="Use it like an app, with or without a signal."
+        />
+        <InstallPanel />
+      </section>
 
       <section>
         <SectionHeading title="Appearance" />

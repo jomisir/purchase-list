@@ -127,7 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Mobile header */}
-      <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md lg:hidden">
+      <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur-md pt-safe px-inset lg:hidden">
         <div className="flex items-center gap-3 px-4 py-2.5">
           <Wordmark compact />
           <div className="min-w-0 flex-1">
@@ -154,7 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <main className="lg:pl-60">
-        <div className="mx-auto w-full max-w-5xl px-4 pt-4 pb-32 sm:px-6 lg:pt-8 lg:pb-12">
+        <div className="mx-auto w-full max-w-5xl px-gutter pt-4 pb-32 lg:pt-8 lg:pb-12">
           {children}
         </div>
       </main>
@@ -162,7 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile bottom navigation */}
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/92 backdrop-blur-xl pb-safe lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/92 backdrop-blur-xl pb-safe px-inset lg:hidden"
       >
         <div className="relative mx-auto grid max-w-md grid-cols-5 items-center px-1">
           {MOBILE_TABS.slice(0, 2).map((item) => (
