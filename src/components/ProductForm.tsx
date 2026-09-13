@@ -7,9 +7,11 @@ import type { ProductDraft } from '@/context/plannerReducer'
 import { Button } from '@/components/ui/Button'
 import { SelectField, TextAreaField, TextField } from '@/components/ui/Field'
 import { ImagePicker } from '@/components/ImagePicker'
+import { CurrencySelect } from '@/components/CurrencySelect'
 
 export interface ProductFormValues {
   name: string
+  currency: string
   price: string
   quantity: string
   category: Category
@@ -29,6 +31,7 @@ type Errors = Partial<Record<keyof ProductFormValues, string>>
 function emptyValues(): ProductFormValues {
   return {
     name: '',
+    currency: 'AED',
     price: '',
     quantity: '1',
     category: 'Electronics',
@@ -47,6 +50,7 @@ function emptyValues(): ProductFormValues {
 function valuesFromProduct(product: Product): ProductFormValues {
   return {
     name: product.name,
+    currency: product.currency,
     price: String(product.estimatedPrice),
     quantity: String(product.quantity),
     category: product.category,
@@ -119,6 +123,7 @@ export function buildDraft(values: ProductFormValues): {
     errors,
     draft: {
       name,
+      currency: values.currency,
       category: values.category,
       brand: values.brand.trim() || undefined,
       image: values.image,
@@ -171,8 +176,9 @@ export function ProductForm({
       return undefined
     }
     if (quantity <= 1) return undefined
-    return `${quantity} × AED ${price} = AED ${Math.round(price * quantity * 100) / 100}`
-  }, [values.price, values.quantity])
+    const total = Math.round(price * quantity * 100) / 100
+    return `${quantity} × ${values.currency} ${price} = ${values.currency} ${total}`
+  }, [values.price, values.quantity, values.currency])
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -210,17 +216,28 @@ export function ProductForm({
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          label="Price"
-          required
-          inputMode="decimal"
-          prefix="AED"
-          value={values.price}
-          onChange={(event) => set('price', event.target.value)}
-          error={errors.price}
-          hint="Your planning estimate, per unit."
-          placeholder="0"
-        />
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <TextField
+              label="Price"
+              required
+              inputMode="decimal"
+              value={values.price}
+              onChange={(event) => set('price', event.target.value)}
+              error={errors.price}
+              hint="Your planning estimate, per unit."
+              placeholder="0"
+            />
+          </div>
+          <div className="shrink-0 pt-[26px]">
+            <CurrencySelect
+              label="Currency for this product"
+              value={values.currency}
+              onChange={(code) => set('currency', code)}
+              className="w-28"
+            />
+          </div>
+        </div>
         <TextField
           label="Quantity"
           required
@@ -265,11 +282,10 @@ export function ProductForm({
         <TextField
           label="Target price"
           inputMode="decimal"
-          prefix="AED"
           value={values.targetPrice}
           onChange={(event) => set('targetPrice', event.target.value)}
           error={errors.targetPrice}
-          hint="Defaults to the price above."
+          hint={`Defaults to the price above. In ${values.currency}.`}
           placeholder="Optional"
         />
       </div>
@@ -278,7 +294,6 @@ export function ProductForm({
         <TextField
           label="Current price seen"
           inputMode="decimal"
-          prefix="AED"
           value={values.currentPrice}
           onChange={(event) => set('currentPrice', event.target.value)}
           error={errors.currentPrice}
@@ -288,7 +303,6 @@ export function ProductForm({
         <TextField
           label="Price paid"
           inputMode="decimal"
-          prefix="AED"
           value={values.actualPrice}
           onChange={(event) => {
             set('actualPrice', event.target.value)

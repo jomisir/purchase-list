@@ -58,10 +58,10 @@ export function PriceHistoryPanel({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Stat label="Lowest" value={formatMoney(stats.lowest)} tone="text-positive" />
-        <Stat label="Highest" value={formatMoney(stats.highest)} tone="text-negative" />
-        <Stat label="Average" value={formatMoney(stats.average)} />
-        <Stat label="Latest" value={formatMoney(stats.latest)} tone="text-brand" />
+        <Stat label="Lowest" value={formatMoney(stats.lowest, product.currency)} tone="text-positive" />
+        <Stat label="Highest" value={formatMoney(stats.highest, product.currency)} tone="text-negative" />
+        <Stat label="Average" value={formatMoney(stats.average, product.currency)} />
+        <Stat label="Latest" value={formatMoney(stats.latest, product.currency)} tone="text-brand" />
       </div>
 
       {history.length > 1 ? (
@@ -71,7 +71,7 @@ export function PriceHistoryPanel({
             {product.targetPrice != null ? (
               <span className="inline-flex items-center gap-1.5">
                 <span aria-hidden="true" className="inline-block h-0.5 w-4 bg-gold" />
-                Target {formatMoney(product.targetPrice)}
+                Target {formatMoney(product.targetPrice, product.currency)}
               </span>
             ) : null}
             <span>{formatShortDate(history[history.length - 1].date)}</span>
@@ -122,7 +122,7 @@ export function PriceHistoryPanel({
                       </span>
                     </th>
                     <td className="tnum px-3 py-2.5 text-right font-semibold text-ink">
-                      {formatMoney(quote.price)}
+                      {formatMoney(quote.price, quote.currency)}
                     </td>
                     <td className="tnum px-3 py-2.5 text-right text-ink-muted">
                       {formatShortDate(quote.date)}
@@ -154,7 +154,7 @@ export function PriceHistoryPanel({
                   record.price === stats.lowest ? 'text-positive' : 'text-ink',
                 )}
               >
-                {formatMoney(record.price)}
+                {formatMoney(record.price, record.currency)}
               </span>
               <span className="min-w-0 flex-1 truncate text-[12.5px] text-ink-muted">
                 {record.store ?? 'Unspecified store'}
@@ -169,7 +169,7 @@ export function PriceHistoryPanel({
                   type="button"
                   onClick={() => onDeleteRecord(record.id)}
                   className="grid size-8 shrink-0 place-items-center rounded-full text-ink-faint transition hover:bg-negative-soft hover:text-negative"
-                  aria-label={`Delete the ${formatMoney(record.price)} price from ${formatShortDate(record.date)}`}
+                  aria-label={`Delete the ${formatMoney(record.price, record.currency)} price from ${formatShortDate(record.date)}`}
                 >
                   <IconTrash className="size-4" />
                 </button>

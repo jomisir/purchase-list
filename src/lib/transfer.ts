@@ -1,7 +1,17 @@
-import type { AppData, Category, PriceRecord, Product, ProductImage, Settings } from '@/types'
+import type {
+  AppData,
+  Category,
+  ExchangeRates,
+  PriceRecord,
+  Product,
+  ProductImage,
+  Settings,
+} from '@/types'
 import { CATEGORIES } from '@/types'
 import { DEFAULT_BUDGET, DEFAULT_CURRENCY, SEED_VERSION } from '@/data/seed'
 import { createId } from '@/lib/id'
+import { emptyRates } from '@/lib/rates'
+import { isKnownCurrency } from '@/lib/currency'
 import { isoDate, nowIso } from '@/lib/date'
 
 export const DATA_VERSION = 1
@@ -70,7 +80,7 @@ function asPriceRecord(value: unknown, productId: string): PriceRecord | null {
     id: typeof value.id === 'string' && value.id ? value.id : createId('price'),
     productId,
     price,
-    currency: DEFAULT_CURRENCY,
+    currency: asCurrency(value.currency, DEFAULT_CURRENCY),
     store: asOptionalString(value.store),
     date: /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : isoDate(),
     notes: asOptionalString(value.notes),
@@ -118,7 +128,7 @@ export function normalizeProduct(value: unknown): Product | null {
     estimatedPrice,
     currentPrice: currentPrice != null && currentPrice >= 0 ? currentPrice : null,
     actualPrice: actualPrice != null && actualPrice >= 0 ? actualPrice : null,
-    currency: DEFAULT_CURRENCY,
+    currency: asCurrency(value.currency, DEFAULT_CURRENCY),
     purchased: Boolean(value.purchased),
     purchasedAt: typeof value.purchasedAt === 'string' ? value.purchasedAt : null,
     notes: asOptionalString(value.notes),
@@ -132,14 +142,54 @@ export function normalizeProduct(value: unknown): Product | null {
   }
 }
 
+function asCurrency(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback
+  const code = value.trim().toUpperCase()
+  return /^[A-Z]{3}$/.test(code) && isKnownCurrency(code) ? code : fallback
+}
+
+function normalizeRates(value: unknown, base: string): ExchangeRates {
+  if (!isObject(value)) return emptyRates(base)
+  const values: Record<string, number> = {}
+  const rawValues = isObject(value.values) ? value.values : {}
+  for (const [code, rate] of Object.entries(rawValues)) {
+    const parsed = asFiniteNumber(rate)
+    if (parsed != null && parsed > 0 && /^[A-Z]{3}$/i.test(code)) {
+      values[code.toUpperCase()] = parsed
+    }
+  }
+  const overrides: Record<string, number> = {}
+  const rawOverrides = isObject(value.overrides) ? value.overrides : {}
+  for (const [code, rate] of Object.entries(rawOverrides)) {
+    const parsed = asFiniteNumber(rate)
+    if (parsed != null && parsed > 0 && /^[A-Z]{3}$/i.test(code)) {
+      overrides[code.toUpperCase()] = parsed
+    }
+  }
+  const ratesBase = asCurrency(value.base, base)
+  values[ratesBase] = 1
+  const source = value.source
+  return {
+    base: ratesBase,
+    values,
+    overrides,
+    updatedAt: typeof value.updatedAt === 'string' ? value.updatedAt : null,
+    source: source === 'api' || source === 'manual' || source === 'none' ? source : 'none',
+    provider: asOptionalString(value.provider),
+  }
+}
+
 function normalizeSettings(value: unknown): Settings {
   const settings = isObject(value) ? value : {}
   const budget = asFiniteNumber(settings.budget)
   const theme = settings.theme
+  const currency = asCurrency(settings.currency, DEFAULT_CURRENCY)
   return {
     budget: budget != null && budget >= 0 ? budget : DEFAULT_BUDGET,
-    currency: DEFAULT_CURRENCY,
+    currency,
     theme: theme === 'light' || theme === 'dark' || theme === 'system' ? theme : 'system',
+    rates: normalizeRates(settings.rates, currency),
+    autoRefreshRates: settings.autoRefreshRates !== false,
   }
 }
 
@@ -160,7 +210,7 @@ export function normalizeAppData(value: unknown): AppData | null {
 }
 
 export interface ExportFile {
-  app: 'dubai-shopping-planner'
+  app: 'shopping-list'
   version: number
   exportedAt: string
   productCount: number
@@ -169,7 +219,7 @@ export interface ExportFile {
 
 export function buildExport(data: AppData): ExportFile {
   return {
-    app: 'dubai-shopping-planner',
+    app: 'shopping-list',
     version: DATA_VERSION,
     exportedAt: nowIso(),
     productCount: data.products.length,

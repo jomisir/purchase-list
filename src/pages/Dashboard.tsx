@@ -1,10 +1,10 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { categoryTotals, computeTotals, dealStatus, lineEstimate, priceStats } from '@/lib/calc'
+import { categoryTotals, dealStatus, lineEstimate, priceStats } from '@/lib/calc'
 import { formatMoney, formatPercent } from '@/lib/money'
 import { formatRelativeDay } from '@/lib/date'
 import { cx } from '@/lib/cx'
-import { usePlanner } from '@/context/plannerContext'
+import { usePlanner, useTotals } from '@/context/plannerContext'
 import { useProductDialogs } from '@/hooks/useProductDialogs'
 import { BudgetSummary } from '@/components/BudgetSummary'
 import { InstallHint } from '@/components/InstallHint'
@@ -29,11 +29,11 @@ export function Dashboard() {
   const { products, settings } = state
   const { dialogs, openDetails, openEdit, openLogPrice, togglePurchased } = useProductDialogs()
 
-  const totals = useMemo(
-    () => computeTotals(products, settings.budget),
-    [products, settings.budget],
+  const totals = useTotals()
+  const categories = useMemo(
+    () => categoryTotals(products, settings.currency, settings.rates),
+    [products, settings.currency, settings.rates],
   )
-  const categories = useMemo(() => categoryTotals(products), [products])
 
   const upNext = useMemo(
     () =>
@@ -72,7 +72,7 @@ export function Dashboard() {
         <EmptyState
           icon={<IconCart className="size-6" />}
           title="Your planner is empty"
-          description="Add your first product, or restore the built-in Dubai plan from Settings."
+          description="Add your first product, or restore the starter plan from Settings."
           action={
             <ButtonLink to="/add">
               <IconPlus className="size-4" />
@@ -92,7 +92,7 @@ export function Dashboard() {
           Dashboard
         </h1>
         <p className="mt-1 text-[13px] text-ink-muted lg:text-[14px]">
-          Everything you planned to buy in Dubai, and what it is costing you.
+          Everything you planned to buy, and what it is costing you.
         </p>
       </header>
 
@@ -141,16 +141,16 @@ export function Dashboard() {
               totals.estimatedTotal > totals.budget ? 'text-caution' : 'text-positive',
             )}
           >
-            {formatMoney(Math.abs(totals.estimatedTotal - totals.budget))}
+            {formatMoney(Math.abs(totals.estimatedTotal - totals.budget), totals.currency)}
             <span className="text-[15px] font-medium text-ink-muted">
               {totals.estimatedTotal > totals.budget ? ' over plan' : ' of headroom'}
             </span>
           </p>
           <p className="mt-2 text-[13px] leading-relaxed text-ink-muted">
             Your {totals.totalCount} planned items add up to{' '}
-            <span className="tnum font-semibold text-ink">{formatMoney(totals.estimatedTotal)}</span>{' '}
+            <span className="tnum font-semibold text-ink">{formatMoney(totals.estimatedTotal, totals.currency)}</span>{' '}
             against a budget of{' '}
-            <span className="tnum font-semibold text-ink">{formatMoney(totals.budget)}</span>.
+            <span className="tnum font-semibold text-ink">{formatMoney(totals.budget, totals.currency)}</span>.
           </p>
           <ButtonLink to="/budget" size="sm" variant="secondary" className="mt-4">
             Adjust budget
@@ -162,7 +162,7 @@ export function Dashboard() {
         <IconInfo className="mt-0.5 size-5 shrink-0 text-brand" />
         <p className="text-[13px] leading-relaxed text-ink-soft">
           <span className="font-semibold text-ink">These prices are planning estimates.</span> No
-          live pricing is connected, so nothing here is a real-time Dubai price. Log what you
+          live pricing is connected, so nothing here is a real-time shop price. Log what you
           actually see in a store and the targets, deals and totals update from your own numbers.
         </p>
       </Card>
@@ -202,8 +202,8 @@ export function Dashboard() {
                     {product.name}
                   </span>
                   <span className="tnum mt-0.5 block text-[12.5px] text-ink-muted">
-                    {formatMoney(product.currentPrice)} vs target{' '}
-                    {formatMoney(product.targetPrice)}
+                    {formatMoney(product.currentPrice, product.currency)} vs target{' '}
+                    {formatMoney(product.targetPrice, product.currency)}
                   </span>
                 </span>
                 <DealBadge product={product} />
@@ -270,9 +270,9 @@ export function Dashboard() {
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="truncate text-[13.5px] font-semibold text-ink">{entry.category}</p>
                   <p className="tnum shrink-0 text-[13px] text-ink-muted">
-                    <span className="font-semibold text-ink">{formatMoney(entry.actual)}</span>
+                    <span className="font-semibold text-ink">{formatMoney(entry.actual, totals.currency)}</span>
                     {' / '}
-                    {formatMoney(entry.estimated)}
+                    {formatMoney(entry.estimated, totals.currency)}
                   </p>
                 </div>
                 <ProgressBar
@@ -280,7 +280,7 @@ export function Dashboard() {
                   className="mt-2"
                   value={entry.estimated > 0 ? (entry.actual / entry.estimated) * 100 : 0}
                   tone={entry.actual > entry.estimated ? 'negative' : 'brand'}
-                  label={`${entry.category}: ${formatMoney(entry.actual)} spent of ${formatMoney(entry.estimated)} estimated`}
+                  label={`${entry.category}: ${formatMoney(entry.actual, totals.currency)} spent of ${formatMoney(entry.estimated, totals.currency)} estimated`}
                 />
                 <p className="tnum mt-1.5 text-[11.5px] text-ink-muted">
                   {entry.done}/{entry.count} bought
@@ -319,10 +319,10 @@ export function Dashboard() {
                   </span>
                   <span className="tnum shrink-0 text-right">
                     <span className="block text-[14px] font-semibold text-ink">
-                      {formatMoney(stats.latest)}
+                      {formatMoney(stats.latest, product.currency)}
                     </span>
                     <span className="block text-[11.5px] text-ink-muted">
-                      low {formatMoney(stats.lowest)}
+                      low {formatMoney(stats.lowest, product.currency)}
                     </span>
                   </span>
                 </button>

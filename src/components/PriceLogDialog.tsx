@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/Toast'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { TextAreaField, TextField } from '@/components/ui/Field'
+import { CurrencySelect } from '@/components/CurrencySelect'
 
 /** Records one observed price for a product: store, date, optional link + note. */
 export function PriceLogDialog({
@@ -22,6 +23,7 @@ export function PriceLogDialog({
   const { actions } = usePlanner()
   const toast = useToast()
   const [price, setPrice] = useState('')
+  const [currency, setCurrency] = useState('AED')
   const [store, setStore] = useState('')
   const [date, setDate] = useState(isoDate())
   const [url, setUrl] = useState('')
@@ -32,6 +34,7 @@ export function PriceLogDialog({
   useEffect(() => {
     if (!open || !product) return
     setPrice(product.currentPrice == null ? '' : String(product.currentPrice))
+    setCurrency(product.currency)
     setStore(product.store ?? '')
     setDate(isoDate())
     setUrl(product.productUrl ?? '')
@@ -57,25 +60,26 @@ export function PriceLogDialog({
 
     actions.addPriceRecord(product.id, {
       price: parsed,
+      currency,
       store: store.trim() || undefined,
       date,
       url: link.value,
       notes: notes.trim() || undefined,
     })
-    toast.success(`Logged ${formatMoney(parsed)} for ${product.name}`)
+    toast.success(`Logged ${formatMoney(parsed, currency)} for ${product.name}`)
     onClose()
   }
 
-  const target = product.targetPrice
+  const target = currency.toUpperCase() === product.currency.toUpperCase() ? product.targetPrice : null
   const parsedPreview = parsePrice(price)
   const preview =
     target != null && typeof parsedPreview === 'number' && Number.isFinite(parsedPreview)
       ? parsedPreview <= target * 0.9
-        ? { tone: 'text-gold-ink', text: `Great deal — ${formatMoney(target - parsedPreview)} under your target` }
+        ? { tone: 'text-gold-ink', text: `Great deal — ${formatMoney(target - parsedPreview, currency)} under your target` }
         : parsedPreview < target
-          ? { tone: 'text-positive', text: `Good deal — ${formatMoney(target - parsedPreview)} under your target` }
+          ? { tone: 'text-positive', text: `Good deal — ${formatMoney(target - parsedPreview, currency)} under your target` }
           : parsedPreview > target
-            ? { tone: 'text-negative', text: `${formatMoney(parsedPreview - target)} above your target` }
+            ? { tone: 'text-negative', text: `${formatMoney(parsedPreview - target, currency)} above your target` }
             : { tone: 'text-brand', text: 'Exactly on target' }
       : null
 
@@ -94,23 +98,36 @@ export function PriceLogDialog({
       }
     >
       <form id="price-log-form" onSubmit={handleSubmit} noValidate className="space-y-4">
-        <TextField
-          label="Price you saw"
-          required
-          autoFocus
-          inputMode="decimal"
-          prefix="AED"
-          value={price}
-          onChange={(event) => {
-            setPrice(event.target.value)
-            setError(null)
-          }}
-          error={error}
-          hint={
-            target != null ? `Your target is ${formatMoney(target)} per unit.` : undefined
-          }
-          placeholder="0"
-        />
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
+            <TextField
+              label="Price you saw"
+              required
+              autoFocus
+              inputMode="decimal"
+              value={price}
+              onChange={(event) => {
+                setPrice(event.target.value)
+                setError(null)
+              }}
+              error={error}
+              hint={
+                target != null
+                  ? `Your target is ${formatMoney(target, currency)} per unit.`
+                  : `Recorded in ${currency}.`
+              }
+              placeholder="0"
+            />
+          </div>
+          <div className="shrink-0 pt-[26px]">
+            <CurrencySelect
+              label="Currency of this price"
+              value={currency}
+              onChange={setCurrency}
+              className="w-28"
+            />
+          </div>
+        </div>
 
         {preview ? (
           <p className={`text-[13px] font-semibold ${preview.tone}`}>{preview.text}</p>

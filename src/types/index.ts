@@ -6,7 +6,22 @@
  * knowing about it.
  */
 
-export type Currency = 'AED'
+/** An ISO 4217 code such as `AED`, `USD`, `JPY`. */
+export type Currency = string
+
+export interface ExchangeRates {
+  /** Currency the rates are expressed against. */
+  base: Currency
+  /** Units of each currency per 1 unit of `base`. `base` itself is always 1. */
+  values: Record<string, number>
+  /** When these rates were fetched or last edited. */
+  updatedAt: string | null
+  source: 'api' | 'manual' | 'none'
+  /** Where they came from, shown to the user verbatim. */
+  provider?: string
+  /** Rates the user typed, which survive a refresh. */
+  overrides?: Record<string, number>
+}
 
 export const CATEGORIES = [
   'Electronics',
@@ -87,8 +102,12 @@ export type ThemePreference = 'system' | 'light' | 'dark'
 
 export interface Settings {
   budget: number
+  /** Currency the budget and every total are expressed in. */
   currency: Currency
   theme: ThemePreference
+  rates: ExchangeRates
+  /** Refresh rates in the background when they go stale. */
+  autoRefreshRates: boolean
 }
 
 export interface AppData {
@@ -105,6 +124,8 @@ export type BudgetStatus = 'under' | 'approaching' | 'over'
 export type DealStatus = 'great' | 'good' | 'at' | 'above'
 
 export interface BudgetTotals {
+  /** The currency every figure below is expressed in. */
+  currency: Currency
   budget: number
   estimatedTotal: number
   actualTotal: number
@@ -119,6 +140,11 @@ export interface BudgetTotals {
   completion: number
   /** actualTotal - estimated cost of the items already bought. */
   varianceOnPurchased: number
+  /**
+   * Products whose currency has no usable rate, so their amounts are missing
+   * from the totals above. The UI says so rather than quietly under-reporting.
+   */
+  unconverted: { id: string; name: string; currency: Currency }[]
 }
 
 export interface PriceStats {

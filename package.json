@@ -1,9 +1,9 @@
 {
-  "name": "dubai-shopping-planner",
+  "name": "shopping-list",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "A personal shopping planner for a Dubai trip: checklist, budget, price tracking and store comparison.",
+  "description": "A personal shopping planner: checklist, budget, multi-currency price tracking and store comparison.",
   "scripts": {
     "dev": "vite",
     "dev:lan": "vite --host",

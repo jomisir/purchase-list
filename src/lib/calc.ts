@@ -1,7 +1,9 @@
 import type {
   BudgetStatus,
   BudgetTotals,
+  Currency,
   DealStatus,
+  ExchangeRates,
   PriceRecord,
   PriceStats,
   Product,
@@ -9,6 +11,7 @@ import type {
   SortKey,
 } from '@/types'
 import { roundMoney } from '@/lib/money'
+import { convert } from '@/lib/rates'
 
 /** Share of the budget at which the app starts warning. */
 export const APPROACHING_THRESHOLD = 0.8
@@ -16,23 +19,23 @@ export const APPROACHING_THRESHOLD = 0.8
 export const GREAT_DEAL_FACTOR = 0.9
 
 export function lineEstimate(product: Product): number {
-  return roundMoney(product.estimatedPrice * product.quantity)
+  return roundMoney(product.estimatedPrice * product.quantity, product.currency)
 }
 
 export function lineTarget(product: Product): number | null {
   if (product.targetPrice == null) return null
-  return roundMoney(product.targetPrice * product.quantity)
+  return roundMoney(product.targetPrice * product.quantity, product.currency)
 }
 
 export function lineCurrent(product: Product): number | null {
   if (product.currentPrice == null) return null
-  return roundMoney(product.currentPrice * product.quantity)
+  return roundMoney(product.currentPrice * product.quantity, product.currency)
 }
 
 /** What was actually paid for the whole line, or 0 when not bought yet. */
 export function lineActual(product: Product): number {
   if (!product.purchased || product.actualPrice == null) return 0
-  return roundMoney(product.actualPrice * product.quantity)
+  return roundMoney(product.actualPrice * product.quantity, product.currency)
 }
 
 /**
@@ -51,48 +54,73 @@ export function budgetStatusFor(percentUsed: number): BudgetStatus {
   return 'under'
 }
 
-export function computeTotals(products: Product[], budget: number): BudgetTotals {
+export function computeTotals(
+  products: Product[],
+  budget: number,
+  currency: Currency = 'AED',
+  rates?: ExchangeRates,
+): BudgetTotals {
   let estimatedTotal = 0
   let actualTotal = 0
   let projectedTotal = 0
   let estimateOfPurchased = 0
   let purchasedCount = 0
+  const unconverted: BudgetTotals['unconverted'] = []
+
+  /**
+   * Brings a product's amount into the home currency. A product priced in the
+   * home currency never needs a rate; anything else is dropped from the totals
+   * and reported, rather than counted at the wrong value.
+   */
+  const toHome = (amount: number, product: Product): number | null => {
+    if (product.currency.toUpperCase() === currency.toUpperCase()) return amount
+    if (!rates) return null
+    return convert(amount, product.currency, currency, rates)
+  }
 
   for (const product of products) {
-    const estimate = lineEstimate(product)
+    const estimate = toHome(lineEstimate(product), product)
+    if (estimate == null) {
+      unconverted.push({ id: product.id, name: product.name, currency: product.currency })
+      if (product.purchased) purchasedCount += 1
+      continue
+    }
     estimatedTotal += estimate
 
     if (product.purchased) {
       purchasedCount += 1
-      const paid = lineActual(product)
+      const paid = toHome(lineActual(product), product) ?? 0
       actualTotal += paid
       estimateOfPurchased += estimate
       // An item marked bought without a price still costs at least its estimate.
       projectedTotal += product.actualPrice == null ? estimate : paid
     } else {
-      projectedTotal += roundMoney(bestKnownPrice(product) * product.quantity)
+      const best = toHome(roundMoney(bestKnownPrice(product) * product.quantity, product.currency), product)
+      projectedTotal += best ?? estimate
     }
   }
 
-  estimatedTotal = roundMoney(estimatedTotal)
-  actualTotal = roundMoney(actualTotal)
-  projectedTotal = roundMoney(projectedTotal)
+  estimatedTotal = roundMoney(estimatedTotal, currency)
+  actualTotal = roundMoney(actualTotal, currency)
+  projectedTotal = roundMoney(projectedTotal, currency)
 
   const percentUsed = budget > 0 ? (actualTotal / budget) * 100 : actualTotal > 0 ? 100 : 0
 
   return {
+    currency,
     budget,
     estimatedTotal,
     actualTotal,
-    remaining: roundMoney(budget - actualTotal),
+    remaining: roundMoney(budget - actualTotal, currency),
     percentUsed,
     status: budgetStatusFor(percentUsed),
     projectedTotal,
-    projectedRemaining: roundMoney(budget - projectedTotal),
+    projectedRemaining: roundMoney(budget - projectedTotal, currency),
     purchasedCount,
     totalCount: products.length,
     completion: products.length === 0 ? 0 : (purchasedCount / products.length) * 100,
-    varianceOnPurchased: roundMoney(actualTotal - estimateOfPurchased),
+    varianceOnPurchased: roundMoney(actualTotal - estimateOfPurchased, currency),
+    unconverted,
   }
 }
 
@@ -107,7 +135,7 @@ export function dealStatus(product: Product): DealStatus | null {
     ? product.actualPrice
     : product.currentPrice
   if (target == null || current == null || target <= 0) return null
-  if (current <= roundMoney(target * GREAT_DEAL_FACTOR)) return 'great'
+  if (current <= roundMoney(target * GREAT_DEAL_FACTOR, product.currency)) return 'great'
   if (current < target) return 'good'
   if (current > target) return 'above'
   return 'at'
@@ -141,7 +169,10 @@ export function priceStats(history: PriceRecord[]): PriceStats {
   return {
     lowest: Math.min(...prices),
     highest: Math.max(...prices),
-    average: roundMoney(prices.reduce((sum, price) => sum + price, 0) / prices.length),
+    average: roundMoney(
+      prices.reduce((sum, price) => sum + price, 0) / prices.length,
+      history[0].currency,
+    ),
     latest: latestRecord.price,
     lowestRecord,
     latestRecord,
@@ -169,7 +200,7 @@ export interface PriceDifference {
 /** Difference between what was paid and what was estimated, for the whole line. */
 export function priceDifference(product: Product): PriceDifference | null {
   if (!product.purchased || product.actualPrice == null) return null
-  const diff = roundMoney(lineActual(product) - lineEstimate(product))
+  const diff = roundMoney(lineActual(product) - lineEstimate(product), product.currency)
   if (diff === 0) return { amount: 0, direction: 'equal', label: 'Exactly on estimate' }
   return {
     amount: diff,
@@ -181,7 +212,7 @@ export function priceDifference(product: Product): PriceDifference | null {
 /** Gap between the current observed price and the target, per unit. */
 export function targetDifference(product: Product): number | null {
   if (product.targetPrice == null || product.currentPrice == null) return null
-  return roundMoney(product.currentPrice - product.targetPrice)
+  return roundMoney(product.currentPrice - product.targetPrice, product.currency)
 }
 
 export function matchesSearch(product: Product, query: string): boolean {
@@ -273,6 +304,7 @@ export function sortProducts(products: Product[], key: SortKey): Product[] {
 export interface StoreQuote {
   store: string
   price: number
+  currency: Currency
   date: string
   url?: string
   notes?: string
@@ -289,6 +321,7 @@ export function storeComparison(product: Product): StoreQuote[] {
       byStore.set(store.toLowerCase(), {
         store,
         price: record.price,
+        currency: record.currency,
         date: record.date,
         url: record.url,
         notes: record.notes,
@@ -299,12 +332,21 @@ export function storeComparison(product: Product): StoreQuote[] {
   return [...byStore.values()].sort((a, b) => a.price - b.price)
 }
 
-export function categoryTotals(products: Product[]) {
+export function categoryTotals(
+  products: Product[],
+  currency: Currency = 'AED',
+  rates?: ExchangeRates,
+) {
   const map = new Map<string, { estimated: number; actual: number; count: number; done: number }>()
+  const toHome = (amount: number, product: Product): number => {
+    if (product.currency.toUpperCase() === currency.toUpperCase()) return amount
+    if (!rates) return 0
+    return convert(amount, product.currency, currency, rates) ?? 0
+  }
   for (const product of products) {
     const entry = map.get(product.category) ?? { estimated: 0, actual: 0, count: 0, done: 0 }
-    entry.estimated = roundMoney(entry.estimated + lineEstimate(product))
-    entry.actual = roundMoney(entry.actual + lineActual(product))
+    entry.estimated = roundMoney(entry.estimated + toHome(lineEstimate(product), product), currency)
+    entry.actual = roundMoney(entry.actual + toHome(lineActual(product), product), currency)
     entry.count += 1
     entry.done += product.purchased ? 1 : 0
     map.set(product.category, entry)

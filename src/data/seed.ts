@@ -4,7 +4,7 @@ import type { Category, Currency, Product } from '@/types'
  * The planner's starting catalogue.
  *
  * Every price here is a PLANNING ESTIMATE gathered while researching the trip —
- * not a live Dubai price. The app never presents them as anything else; real
+ * not a live price. The app never presents them as anything else; real
  * prices arrive when the user logs what they actually see in a store.
  */
 

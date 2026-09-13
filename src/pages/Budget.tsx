@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { categoryTotals, computeTotals } from '@/lib/calc'
+import { categoryTotals } from '@/lib/calc'
 import { formatMoney, formatPercent, parsePrice } from '@/lib/money'
 import { cx } from '@/lib/cx'
-import { usePlanner } from '@/context/plannerContext'
+import { usePlanner, useTotals } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
 import { budgetStatusCopy, STATUS_TONE } from '@/components/BudgetSummary'
 import { Card, SectionHeading } from '@/components/ui/Card'
@@ -45,11 +45,11 @@ function Row({
 export function Budget() {
   const { state, actions } = usePlanner()
   const toast = useToast()
-  const totals = useMemo(
-    () => computeTotals(state.products, state.settings.budget),
-    [state.products, state.settings.budget],
+  const totals = useTotals()
+  const categories = useMemo(
+    () => categoryTotals(state.products, state.settings.currency, state.settings.rates),
+    [state.products, state.settings.currency, state.settings.rates],
   )
-  const categories = useMemo(() => categoryTotals(state.products), [state.products])
 
   const [custom, setCustom] = useState(String(state.settings.budget))
   const [error, setError] = useState<string | null>(null)
@@ -69,7 +69,7 @@ export function Budget() {
     if (parsed > 100_000_000) return setError('That budget is unrealistically large.')
     setError(null)
     actions.setBudget(parsed)
-    toast.success(`Budget set to ${formatMoney(parsed)}.`)
+    toast.success(`Budget set to ${formatMoney(parsed, totals.currency)}.`)
   }
 
   return (
@@ -87,7 +87,7 @@ export function Budget() {
             Total budget
           </p>
           <p className="tnum mt-1 text-[32px] leading-none font-semibold tracking-tight text-ink">
-            {formatMoney(state.settings.budget)}
+            {formatMoney(state.settings.budget, totals.currency)}
           </p>
 
           <div className="mt-4">
@@ -112,15 +112,15 @@ export function Budget() {
         </div>
 
         <dl className="divide-y divide-line">
-          <Row label="Budget" value={formatMoney(totals.budget)} strong />
-          <Row label="Estimated cost of everything planned" value={formatMoney(totals.estimatedTotal)} />
-          <Row label="Actual cost so far" value={formatMoney(totals.actualTotal)} tone="text-brand" />
+          <Row label="Budget" value={formatMoney(totals.budget, totals.currency)} strong />
+          <Row label="Estimated cost of everything planned" value={formatMoney(totals.estimatedTotal, totals.currency)} />
+          <Row label="Actual cost so far" value={formatMoney(totals.actualTotal, totals.currency)} tone="text-brand" />
           <Row
             label="Remaining"
             value={
               totals.remaining < 0
-                ? `${formatMoney(Math.abs(totals.remaining))} over`
-                : formatMoney(totals.remaining)
+                ? `${formatMoney(Math.abs(totals.remaining), totals.currency)} over`
+                : formatMoney(totals.remaining, totals.currency)
             }
             tone={totals.remaining < 0 ? 'text-negative' : 'text-positive'}
             strong
@@ -128,7 +128,7 @@ export function Budget() {
           <Row label="Percentage used" value={formatPercent(totals.percentUsed, 1)} />
           <Row
             label="Projected total (spent + best known prices)"
-            value={formatMoney(totals.projectedTotal)}
+            value={formatMoney(totals.projectedTotal, totals.currency)}
             tone={totals.projectedTotal > totals.budget ? 'text-caution' : 'text-ink'}
           />
           <Row
@@ -136,7 +136,7 @@ export function Budget() {
             value={
               totals.varianceOnPurchased === 0
                 ? 'On estimate'
-                : `${formatMoney(Math.abs(totals.varianceOnPurchased))} ${
+                : `${formatMoney(Math.abs(totals.varianceOnPurchased), totals.currency)} ${
                     totals.varianceOnPurchased < 0 ? 'saved' : 'over'
                   }`
             }
@@ -150,7 +150,7 @@ export function Budget() {
           <IconInfo className="mt-0.5 size-5 shrink-0 text-negative" />
           <p className="text-[13px] leading-relaxed text-ink-soft">
             <span className="font-semibold text-negative">
-              You are {formatMoney(Math.abs(totals.remaining))} over budget.
+              You are {formatMoney(Math.abs(totals.remaining), totals.currency)} over budget.
             </span>{' '}
             Nothing is blocked — keep buying if you want to. Raise the budget below if the number
             no longer reflects your plan.
@@ -170,7 +170,7 @@ export function Budget() {
                   type="button"
                   onClick={() => {
                     actions.setBudget(amount)
-                    toast.success(`Budget set to ${formatMoney(amount)}.`)
+                    toast.success(`Budget set to ${formatMoney(amount, totals.currency)}.`)
                   }}
                   aria-pressed={active}
                   className={cx(
@@ -181,7 +181,7 @@ export function Budget() {
                   )}
                 >
                   {active ? <IconCheck className="size-4" /> : null}
-                  {formatMoney(amount)}
+                  {formatMoney(amount, totals.currency)}
                 </button>
               )
             })}
@@ -190,9 +190,8 @@ export function Budget() {
           <form onSubmit={applyCustom} noValidate className="mt-4 flex flex-wrap items-end gap-3">
             <div className="min-w-44 flex-1">
               <TextField
-                label="Custom budget"
+                label={`Custom budget (${totals.currency})`}
                 inputMode="decimal"
-                prefix="AED"
                 value={custom}
                 onChange={(event) => {
                   setCustom(event.target.value)
@@ -221,7 +220,7 @@ export function Budget() {
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="truncate text-[13.5px] font-semibold text-ink">{entry.category}</p>
                   <p className="tnum shrink-0 text-[13px] font-semibold text-ink">
-                    {formatMoney(entry.estimated)}
+                    {formatMoney(entry.estimated, totals.currency)}
                   </p>
                 </div>
                 <ProgressBar
@@ -232,7 +231,7 @@ export function Budget() {
                   label={`${entry.category} is ${formatPercent(share)} of the estimated total`}
                 />
                 <p className="tnum mt-1.5 text-[11.5px] text-ink-muted">
-                  {formatPercent(share)} of the plan · {formatMoney(entry.actual)} spent
+                  {formatPercent(share)} of the plan · {formatMoney(entry.actual, totals.currency)} spent
                 </p>
               </div>
             )

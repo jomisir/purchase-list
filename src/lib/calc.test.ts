@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   bestKnownPrice,
+  categoryTotals,
   budgetStatusFor,
   computeTotals,
   dealStatus,
@@ -254,5 +255,86 @@ describe('search, filters and sorting', () => {
   it('leaves the planner order untouched by default', () => {
     const list = [makeProduct(), makeProduct(), makeProduct()]
     expect(sortProducts(list, 'default')).toEqual(list)
+  })
+})
+
+describe('totals across several currencies', () => {
+  const rates = {
+    base: 'AED',
+    values: { AED: 1, USD: 0.2723, EUR: 0.2509 },
+    updatedAt: '2026-09-13T00:00:00.000Z',
+    source: 'api' as const,
+    overrides: {},
+  }
+
+  it('converts every line into the home currency', () => {
+    const totals = computeTotals(
+      [
+        makeProduct({ estimatedPrice: 100, currency: 'AED' }),
+        makeProduct({ estimatedPrice: 27.23, currency: 'USD' }),
+      ],
+      1000,
+      'AED',
+      rates,
+    )
+    // 27.23 USD is 100 AED, so the plan is 200 AED.
+    expect(totals.estimatedTotal).toBeCloseTo(200, 2)
+    expect(totals.currency).toBe('AED')
+    expect(totals.unconverted).toEqual([])
+  })
+
+  it('gives the same answer whichever currency is the home one', () => {
+    const products = [
+      makeProduct({ estimatedPrice: 100, currency: 'AED' }),
+      makeProduct({ estimatedPrice: 50, currency: 'USD' }),
+    ]
+    const inAed = computeTotals(products, 1000, 'AED', rates)
+    const inUsd = computeTotals(products, 1000, 'USD', rates)
+    expect(inUsd.estimatedTotal).toBeCloseTo(inAed.estimatedTotal * 0.2723, 2)
+  })
+
+  it('reports what it could not convert instead of under-reporting', () => {
+    const totals = computeTotals(
+      [
+        makeProduct({ estimatedPrice: 100, currency: 'AED' }),
+        makeProduct({ name: 'Yen thing', estimatedPrice: 5000, currency: 'JPY' }),
+      ],
+      1000,
+      'AED',
+      rates,
+    )
+    expect(totals.estimatedTotal).toBe(100)
+    expect(totals.unconverted).toHaveLength(1)
+    expect(totals.unconverted[0]).toMatchObject({ name: 'Yen thing', currency: 'JPY' })
+  })
+
+  it('still counts a purchased item it cannot convert towards completion', () => {
+    const totals = computeTotals(
+      [makeProduct({ currency: 'JPY', purchased: true, actualPrice: 500 })],
+      1000,
+      'AED',
+      rates,
+    )
+    expect(totals.purchasedCount).toBe(1)
+    expect(totals.completion).toBe(100)
+    expect(totals.actualTotal).toBe(0)
+  })
+
+  it('needs no rates at all when everything shares the home currency', () => {
+    const totals = computeTotals([makeProduct({ estimatedPrice: 100, currency: 'AED' })], 500, 'AED')
+    expect(totals.estimatedTotal).toBe(100)
+    expect(totals.unconverted).toEqual([])
+  })
+
+  it('converts category subtotals too', () => {
+    const rows = categoryTotals(
+      [
+        makeProduct({ category: 'Electronics', estimatedPrice: 100, currency: 'AED' }),
+        makeProduct({ category: 'Electronics', estimatedPrice: 27.23, currency: 'USD' }),
+      ],
+      'AED',
+      rates,
+    )
+    expect(rows[0].estimated).toBeCloseTo(200, 2)
   })
 })

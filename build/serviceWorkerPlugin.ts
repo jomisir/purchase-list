@@ -35,6 +35,8 @@ export function serviceWorkerPlugin(options: { extraAssets?: string[] } = {}): P
 function renderServiceWorker(version: string, precache: string[]): string {
   return `/* Generated at build time — do not edit. Build ${version}. */
 const VERSION = '${version}'
+// Prefix unchanged since the rename so the activate step still recognises,
+// and clears, caches written by earlier versions.
 const CACHE = 'dubai-shopping-planner-' + VERSION
 const PRECACHE = ${JSON.stringify(precache, null, 2)}
 

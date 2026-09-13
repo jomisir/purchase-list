@@ -143,31 +143,31 @@ export function ProductCard({
           <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-3">
             <PriceColumn
               label={product.targetPrice != null ? 'Target' : 'Estimated'}
-              value={formatMoney(product.targetPrice ?? product.estimatedPrice)}
+              value={formatMoney(product.targetPrice ?? product.estimatedPrice, product.currency)}
               tone="muted"
-              sub={multi ? `${formatMoney(lineEstimate(product))} for ${product.quantity}` : undefined}
+              sub={multi ? `${formatMoney(lineEstimate(product), product.currency)} for ${product.quantity}` : undefined}
             />
             {product.purchased ? (
               <PriceColumn
                 label="Paid"
-                value={formatMoney(product.actualPrice)}
+                value={formatMoney(product.actualPrice, product.currency)}
                 tone="positive"
                 sub={
                   multi && product.actualPrice != null
-                    ? `${formatMoney(product.actualPrice * product.quantity)} total`
+                    ? `${formatMoney(product.actualPrice * product.quantity, product.currency)} total`
                     : undefined
                 }
               />
             ) : (
               <PriceColumn
                 label="Current"
-                value={product.currentPrice == null ? 'Not checked' : formatMoney(product.currentPrice)}
+                value={product.currentPrice == null ? 'Not checked' : formatMoney(product.currentPrice, product.currency)}
                 tone={product.currentPrice == null ? 'muted' : 'brand'}
                 sub={
                   vsTarget != null
                     ? vsTarget === 0
                       ? 'Exactly on target'
-                      : `${formatMoney(Math.abs(vsTarget))} ${vsTarget < 0 ? 'under' : 'over'} target`
+                      : `${formatMoney(Math.abs(vsTarget), product.currency)} ${vsTarget < 0 ? 'under' : 'over'} target`
                     : undefined
                 }
               />
@@ -175,7 +175,7 @@ export function ProductCard({
             {stats.lowest != null ? (
               <PriceColumn
                 label="Lowest seen"
-                value={formatMoney(stats.lowest)}
+                value={formatMoney(stats.lowest, product.currency)}
                 tone="muted"
                 sub={stats.lowestRecord?.store}
               />
@@ -188,7 +188,7 @@ export function ProductCard({
               <Badge tone={difference.direction === 'saved' ? 'positive' : difference.direction === 'over' ? 'caution' : 'neutral'}>
                 {difference.direction === 'equal'
                   ? 'ON ESTIMATE'
-                  : `${formatMoney(Math.abs(difference.amount))} ${difference.direction === 'saved' ? 'SAVED' : 'OVER'}`}
+                  : `${formatMoney(Math.abs(difference.amount), product.currency)} ${difference.direction === 'saved' ? 'SAVED' : 'OVER'}`}
               </Badge>
             ) : null}
             {product.purchased ? <Badge tone="positive">PURCHASED</Badge> : null}

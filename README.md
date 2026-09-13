@@ -1,8 +1,11 @@
-# Dubai Shopping Planner
+# Shopping List
 
-A personal shopping planner for a Dubai trip: a checklist of everything you plan
-to buy, what you expect it to cost, what you actually paid, and how much budget
-is left. Built to be used one-handed on a phone while standing in a shop.
+A personal shopping planner: a checklist of everything you plan to buy, what you
+expect it to cost, what you actually paid, and how much budget is left. Built to
+be used one-handed on a phone while standing in a shop.
+
+Prices can be in any of the world's currencies, and totals are converted into
+whichever one you pick.
 
 It installs to your home screen and **works with no signal at all** — useful in a
 mall basement. Everything is stored on your own device; nothing is uploaded.
@@ -28,14 +31,23 @@ mall basement. Everything is stored on your own device; nothing is uploaded.
   exactly like preloaded ones.
 - **Shopping Mode** — a stripped-back full-screen view for use inside a store:
   image, name, target, best price, store, notes and a large checkbox.
-- **Settings** — appearance, JSON export/import, reset to the original plan.
+- **Currency** — pick any ISO currency for your budget and totals, price
+  individual items in whatever currency you saw them in, and let the app convert.
+  Exchange rates refresh from a live source in the background.
+- **Settings** — appearance, JSON export/import, reset to the starter plan.
 
-### About the prices
+### About the prices and rates
 
-Every preloaded figure is a **planning estimate** gathered before the trip. No
-live pricing API is connected and the app never implies otherwise: a product has
-no "current price" until you log one yourself, and deal labels are calculated
-only from prices you recorded.
+Every preloaded figure is a **planning estimate**. No live *pricing* API is
+connected and the app never implies otherwise: a product has no "current price"
+until you log one yourself, and deal labels are calculated only from prices you
+recorded.
+
+Exchange rates are the one thing that is fetched, because a rate is a fact about
+the world rather than a claim about a shop. They are stamped with their source
+and the time they were fetched, cached for offline use, and can be overridden by
+hand. When no rate exists for a currency, the affected items are **excluded from
+the totals and named on screen** rather than counted at the wrong value.
 
 Bundled product artwork is hand-drawn illustration shipped with the app, marked
 as such in the UI, and never presented as a photo of a specific item for sale.
@@ -116,6 +128,8 @@ src/
   lib/
     pwa.ts        service-worker registration, updates, install prompt
     calc.ts       all money/deal/stat maths as pure functions
+    currency.ts   the ISO currency list, derived from the runtime's own data
+    rates.ts      fetching, caching and applying exchange rates
     money.ts      formatting and price parsing
     transfer.ts   import/export + defensive normalisation of stored data
     url.ts        product-link validation
@@ -140,6 +154,29 @@ Three rules hold the structure together:
 3. **Persistence is an interface.** `lib/storage` exposes an async
    `PersistenceAdapter` (`load` / `save` / `clear`). IndexedDB is the default,
    localStorage the fallback, in-memory the last resort.
+
+### Currencies and exchange rates
+
+The currency list is not a hand-maintained table — it comes from
+`Intl.supportedValuesOf('currency')`, with names, symbols and minor units read
+from `Intl` too. That keeps it complete and correct: yen has no decimal places,
+Kuwaiti dinar has three, and formatting follows each currency's own conventions.
+
+Rates are fetched from two free, keyless providers that are **raced against each
+other**, so a refresh takes as long as the quicker one rather than the slower:
+
+| Provider | Why |
+| --- | --- |
+| `cdn.jsdelivr.net` (currency-api) | A static file on a global CDN — usually the fastest |
+| `open.er-api.com` | Independent fallback with broad coverage |
+
+Refreshes happen in the background on launch when the stored rates are more than
+12 hours old, never blocking the first screen, and are skipped entirely when the
+browser reports it is offline. A manual **Refresh now** button reports how long
+it actually took.
+
+`convert()` returns `null` rather than a guess when a rate is missing, and every
+caller is written to say so.
 
 ### Adding a real price API later
 
@@ -170,11 +207,12 @@ async and the state shape (`AppData`) maps directly to `products`,
 
 ## Testing
 
-`npm test` runs 66 unit tests covering budget totals, deal thresholds, price
+`npm test` runs 113 unit tests covering budget totals, deal thresholds, price
 statistics, store comparison, search/sort/filter, every reducer action, the
-import/export round trip, URL validation and the integrity of the seed catalogue
-(no duplicates, one smartwatch, targets inside their stated ranges, and an
-estimated total that adds up to the products themselves).
+import/export round trip, URL validation, currency formatting and rounding,
+rate conversion and re-basing, provider racing and failure, and the integrity of
+the seed catalogue (no duplicates, one smartwatch, targets inside their stated
+ranges, and an estimated total that adds up to the products themselves).
 
 The UI was additionally driven end-to-end with Playwright across the acceptance
 checklist — purchases, price logging, image upload, edit/delete, persistence
@@ -188,6 +226,15 @@ with the network switched fully off the app still cold-starts, renders all 25
 products with their artwork, and records a new price. The iOS path was checked
 under an iPhone user agent to confirm it shows Share-sheet instructions instead
 of a button that would do nothing.
+
+## A note on the name
+
+The app is called **Shopping List**, but a few internal identifiers still read
+`dubai-shopping-planner`: the localStorage key, the IndexedDB database name, the
+service-worker cache prefix, and the manifest `id`. That is deliberate. Those
+strings are identity, not labels — renaming them would orphan the data already
+saved on people's phones and make browsers treat the app as a brand new install.
+See `public/README-manifest.md`.
 
 ## Phone behaviour
 

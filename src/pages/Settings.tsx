@@ -1,14 +1,14 @@
 import { useRef, useState } from 'react'
 import type { ThemePreference } from '@/types'
-import { computeTotals } from '@/lib/calc'
 import { formatMoney } from '@/lib/money'
 import { isoDate } from '@/lib/date'
 import { ImportError, parseImport, serializeExport } from '@/lib/transfer'
 import { cx } from '@/lib/cx'
-import { usePlanner } from '@/context/plannerContext'
+import { usePlanner, useTotals } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
 import { Card, SectionHeading } from '@/components/ui/Card'
 import { InstallPanel } from '@/components/InstallPanel'
+import { CurrencyPanel } from '@/components/CurrencyPanel'
 import { Button } from '@/components/ui/Button'
 import {
   IconAlert,
@@ -34,7 +34,7 @@ export function Settings() {
   const [importError, setImportError] = useState<string | null>(null)
   const [confirmingReset, setConfirmingReset] = useState(false)
 
-  const totals = computeTotals(state.products, state.settings.budget)
+  const totals = useTotals()
   const priceRecords = state.products.reduce(
     (total, product) => total + product.priceHistory.length,
     0,
@@ -48,7 +48,7 @@ export function Settings() {
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = `dubai-shopping-planner-${isoDate()}.json`
+      anchor.download = `shopping-list-${isoDate()}.json`
       document.body.append(anchor)
       anchor.click()
       anchor.remove()
@@ -110,6 +110,14 @@ export function Settings() {
       </section>
 
       <section>
+        <SectionHeading
+          title="Currency & exchange rates"
+          hint="Pick any of the world's currencies; totals are converted into the one you choose."
+        />
+        <CurrencyPanel />
+      </section>
+
+      <section>
         <SectionHeading title="Appearance" />
         <Card className="p-4">
           <div className="flex flex-wrap gap-2">
@@ -148,8 +156,9 @@ export function Settings() {
             { label: 'Custom products', value: String(customCount) },
             { label: 'Purchased', value: `${totals.purchasedCount} of ${totals.totalCount}` },
             { label: 'Price records', value: String(priceRecords) },
-            { label: 'Budget', value: formatMoney(state.settings.budget) },
-            { label: 'Spent', value: formatMoney(totals.actualTotal) },
+            { label: 'Currency', value: state.settings.currency },
+            { label: 'Budget', value: formatMoney(state.settings.budget, state.settings.currency) },
+            { label: 'Spent', value: formatMoney(totals.actualTotal, totals.currency) },
             { label: 'Storage', value: storageName },
           ].map((row) => (
             <div key={row.label} className="flex items-baseline justify-between gap-4 px-4 py-2.5">
@@ -205,7 +214,7 @@ export function Settings() {
         <SectionHeading title="Reset" />
         <Card className="space-y-3 p-4 sm:p-5">
           <p className="text-[13px] leading-relaxed text-ink-soft">
-            Restore the original Dubai plan. This deletes your custom products, purchases and every
+            Restore the starter plan. This deletes your custom products, purchases and every
             price you have logged. Export a backup first if you might want it back.
           </p>
           <div className="flex flex-wrap items-center gap-2">
@@ -219,11 +228,11 @@ export function Settings() {
                 }
                 actions.resetToSeed()
                 setConfirmingReset(false)
-                toast.success('Planner reset to the original Dubai plan.')
+                toast.success('Reset to the starter plan.')
               }}
             >
               <IconRefresh className="size-4" />
-              {confirmingReset ? 'Tap again to confirm reset' : 'Reset to the default plan'}
+              {confirmingReset ? 'Tap again to confirm reset' : 'Reset to the starter plan'}
             </Button>
             {confirmingReset ? (
               <Button variant="ghost" size="lg" onClick={() => setConfirmingReset(false)}>
@@ -241,8 +250,7 @@ export function Settings() {
           <div className="space-y-2 text-[13px] leading-relaxed text-ink-soft">
             <p>
               <span className="font-semibold text-ink">No live price feed is connected.</span> Every
-              preloaded figure is a planning estimate from before the trip, not a guaranteed Dubai
-              price. Targets, deals and totals are calculated only from prices you record yourself.
+              preloaded figure is a planning estimate, not a guaranteed shop price. Targets, deals and totals are calculated only from prices you record yourself.
             </p>
             <p>
               Built-in product artwork is illustration, drawn for this app. It is not a photo of any

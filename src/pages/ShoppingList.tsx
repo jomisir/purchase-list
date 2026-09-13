@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { computeTotals } from '@/lib/calc'
 import { formatMoney, formatPercent } from '@/lib/money'
-import { usePlanner } from '@/context/plannerContext'
+import { usePlanner, useTotals } from '@/context/plannerContext'
 import { useProductDialogs } from '@/hooks/useProductDialogs'
 import {
   DEFAULT_FILTERS,
@@ -20,7 +19,7 @@ export function ShoppingList() {
   const [filters, setFilters] = useState<ListFilters>(DEFAULT_FILTERS)
   const visible = useFilteredProducts(state.products, filters)
   const { dialogs, openDetails, openEdit, openLogPrice, togglePurchased } = useProductDialogs()
-  const totals = computeTotals(state.products, state.settings.budget)
+  const totals = useTotals()
 
   const filtered = filters.query !== '' || filters.status !== 'all' || filters.category !== 'all'
 
@@ -33,7 +32,7 @@ export function ShoppingList() {
           </h1>
           <p className="tnum mt-1 text-[13px] text-ink-muted">
             {totals.purchasedCount} of {totals.totalCount} bought ·{' '}
-            {formatMoney(totals.actualTotal)} spent
+            {formatMoney(totals.actualTotal, totals.currency)} spent
           </p>
         </div>
         <div className="flex gap-2">

@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/Toast'
 import { Modal } from '@/components/ui/Modal'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
+import { CurrencySelect } from '@/components/CurrencySelect'
 
 /** Asks what was actually paid when an item is checked off the list. */
 export function PurchaseDialog({
@@ -57,8 +58,8 @@ export function PurchaseDialog({
       diff === 0
         ? `${product.name} marked as bought.`
         : diff < 0
-          ? `Bought — ${formatMoney(Math.abs(diff))} under estimate.`
-          : `Bought — ${formatMoney(diff)} above estimate.`,
+          ? `Bought — ${formatMoney(Math.abs(diff), product.currency)} under estimate.`
+          : `Bought — ${formatMoney(diff, product.currency)} above estimate.`,
     )
     onClose()
   }
@@ -73,7 +74,7 @@ export function PurchaseDialog({
   const parsed = parsePrice(price)
   const lineTotal =
     typeof parsed === 'number' && Number.isFinite(parsed) && product.quantity > 1
-      ? `${product.quantity} × ${formatMoney(parsed)} = ${formatMoney(parsed * product.quantity)}`
+      ? `${product.quantity} × ${formatMoney(parsed, product.currency)} = ${formatMoney(parsed * product.quantity, product.currency)}`
       : undefined
 
   return (
@@ -94,20 +95,31 @@ export function PurchaseDialog({
       }
     >
       <form id="purchase-form" onSubmit={confirm} noValidate className="space-y-4">
+        <div className="flex items-start gap-2">
+          <div className="min-w-0 flex-1">
         <TextField
           label="Price paid (per unit)"
           required
           autoFocus
           inputMode="decimal"
-          prefix="AED"
           value={price}
           onChange={(event) => {
             setPrice(event.target.value)
             setError(null)
           }}
           error={error}
-          hint={lineTotal ?? `Estimated ${formatMoney(lineEstimate(product))} for this line.`}
+          hint={lineTotal ?? `Estimated ${formatMoney(lineEstimate(product), product.currency)} for this line.`}
         />
+          </div>
+          <div className="shrink-0 pt-[26px]">
+            <CurrencySelect
+              label="Currency paid in"
+              value={product.currency}
+              onChange={(code) => actions.updateProduct(product.id, { currency: code })}
+              className="w-28"
+            />
+          </div>
+        </div>
         <TextField
           label="Store"
           value={store}

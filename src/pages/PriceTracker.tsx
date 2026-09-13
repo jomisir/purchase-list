@@ -88,10 +88,10 @@ function TrackerRow({
           </div>
 
           <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4">
-            <Metric label="Target" value={formatMoney(product.targetPrice)} />
+            <Metric label="Target" value={formatMoney(product.targetPrice, product.currency)} />
             <Metric
               label="Current"
-              value={product.currentPrice == null ? 'Not checked' : formatMoney(product.currentPrice)}
+              value={product.currentPrice == null ? 'Not checked' : formatMoney(product.currentPrice, product.currency)}
               tone={
                 product.currentPrice == null
                   ? 'text-ink-muted'
@@ -102,12 +102,12 @@ function TrackerRow({
             />
             <Metric
               label="Lowest"
-              value={stats.lowest == null ? '—' : formatMoney(stats.lowest)}
+              value={stats.lowest == null ? '—' : formatMoney(stats.lowest, product.currency)}
               tone={stats.lowest == null ? 'text-ink-muted' : 'text-positive'}
             />
             <Metric
               label="Highest"
-              value={stats.highest == null ? '—' : formatMoney(stats.highest)}
+              value={stats.highest == null ? '—' : formatMoney(stats.highest, product.currency)}
               tone="text-ink-soft"
             />
           </dl>
@@ -125,7 +125,7 @@ function TrackerRow({
               <span className={vsTarget <= 0 ? 'text-positive' : 'text-negative'}>
                 {vsTarget === 0
                   ? 'On target'
-                  : `${formatMoney(Math.abs(vsTarget))} ${vsTarget < 0 ? 'under' : 'over'} target`}
+                  : `${formatMoney(Math.abs(vsTarget), product.currency)} ${vsTarget < 0 ? 'under' : 'over'} target`}
               </span>
             ) : null}
           </p>
@@ -161,7 +161,7 @@ function TrackerRow({
                     ) : null}
                   </th>
                   <td className="tnum px-3 py-1.5 text-right font-semibold text-ink">
-                    {formatMoney(quote.price)}
+                    {formatMoney(quote.price, quote.currency)}
                   </td>
                 </tr>
               ))}

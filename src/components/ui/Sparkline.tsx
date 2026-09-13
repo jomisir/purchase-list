@@ -52,7 +52,7 @@ export function Sparkline({
       style={{ aspectRatio: `${width} / ${height}` }}
       role="img"
       aria-label={`Price history: ${records
-        .map((record) => `${formatShortDate(record.date)} ${formatMoney(record.price)}`)
+        .map((record) => `${formatShortDate(record.date)} ${formatMoney(record.price, record.currency)}`)
         .join(', ')}`}
     >
       <defs>

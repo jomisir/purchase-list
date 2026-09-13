@@ -1,7 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
-import { usePlanner } from '@/context/plannerContext'
-import { computeTotals } from '@/lib/calc'
+import { useTotals } from '@/context/plannerContext'
 import { formatMoney } from '@/lib/money'
 import { cx } from '@/lib/cx'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -51,10 +50,10 @@ function Wordmark({ compact }: { compact?: boolean }) {
       </span>
       {!compact ? (
         <span className="min-w-0 leading-tight">
-          <span className="block truncate text-[14px] font-semibold tracking-tight text-ink">
-            Dubai Shopping
+          <span className="block truncate text-[15px] font-semibold tracking-tight text-ink">
+            Shopping List
           </span>
-          <span className="block text-[11.5px] text-ink-muted">Planner</span>
+          <span className="block text-[11.5px] text-ink-muted">Plan · price · budget</span>
         </span>
       ) : null}
     </span>
@@ -62,10 +61,9 @@ function Wordmark({ compact }: { compact?: boolean }) {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { state } = usePlanner()
   const location = useLocation()
-  const totals = computeTotals(state.products, state.settings.budget)
-  const title = PAGE_TITLES[location.pathname] ?? 'Dubai Shopping Planner'
+  const totals = useTotals()
+  const title = PAGE_TITLES[location.pathname] ?? 'Shopping List'
 
   return (
     <div className="min-h-dvh bg-bg">
@@ -115,7 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 totals.remaining < 0 ? 'text-negative' : 'text-ink',
               )}
             >
-              {formatMoney(totals.remaining)}
+              {formatMoney(totals.remaining, totals.currency)}
             </p>
             <p className="tnum mt-0.5 text-[11.5px] text-ink-muted">
               {totals.purchasedCount}/{totals.totalCount} items bought
@@ -133,7 +131,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold tracking-tight text-ink">{title}</p>
             <p className="tnum truncate text-[11.5px] text-ink-muted">
-              {formatMoney(totals.remaining)} left · {totals.purchasedCount}/{totals.totalCount}{' '}
+              {formatMoney(totals.remaining, totals.currency)} left · {totals.purchasedCount}/{totals.totalCount}{' '}
               bought
             </p>
           </div>

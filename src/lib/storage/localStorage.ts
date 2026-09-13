@@ -1,6 +1,10 @@
 import type { AppData } from '@/types'
 import type { PersistenceAdapter } from './types'
 
+/**
+ * The app was renamed to "Shopping List", but this key was not: it identifies
+ * data already saved on people's phones. Renaming it would orphan their lists.
+ */
 export const STORAGE_KEY = 'dubai-shopping-planner/v1'
 
 /** Fallback adapter. Small quota, but available almost everywhere. */

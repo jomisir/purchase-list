@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { AppData, Product, ThemePreference } from '@/types'
+import type { AppData, Currency, ExchangeRates, Product, ThemePreference } from '@/types'
 import { createPersistence } from '@/lib/storage'
+import { applyFetch, fetchRates, isStale, RateError } from '@/lib/rates'
 import { normalizeAppData } from '@/lib/transfer'
 import { createId } from '@/lib/id'
 import {
@@ -55,6 +56,53 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     }
   }, [state, persistence])
 
+  const currency = state.settings.currency
+  const rates = state.settings.rates
+  const autoRefresh = state.settings.autoRefreshRates
+  const refreshing = useRef(false)
+
+  /** Fetches rates for the current home currency, keeping manual overrides. */
+  const refreshRates = useCallback(async (): Promise<{ ok: boolean; message: string }> => {
+    if (refreshing.current) return { ok: false, message: 'A refresh is already running.' }
+    refreshing.current = true
+    try {
+      const result = await fetchRates(currency)
+      dispatch({ type: 'setRates', rates: applyFetch(rates, result, currency) })
+      return { ok: true, message: `Rates updated from ${result.provider}.` }
+    } catch (error) {
+      return {
+        ok: false,
+        message:
+          error instanceof RateError
+            ? error.message
+            : 'Could not fetch exchange rates just now.',
+      }
+    } finally {
+      refreshing.current = false
+    }
+  }, [currency, rates])
+
+  // Top rates up in the background once the app is running, so the first screen
+  // is never waiting on the network. Failures are silent — the stored rates,
+  // and the date stamp beside them, stay exactly as they were.
+  useEffect(() => {
+    if (!state.hydrated || !autoRefresh) return
+    if (!isStale(rates)) return
+    // navigator.onLine is unreliable for "is the internet reachable", but a
+    // definite false is worth trusting: skip the request rather than log a
+    // failed fetch the user can do nothing about.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+    let cancelled = false
+    const timer = setTimeout(() => {
+      if (cancelled) return
+      void refreshRates()
+    }, 400)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [state.hydrated, autoRefresh, rates, refreshRates])
+
   const addProduct = useCallback((draft: ProductDraft) => {
     const id = createId('product')
     dispatch({ type: 'addProduct', draft, id })
@@ -65,6 +113,14 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     () => ({
       setBudget: (budget: number) => dispatch({ type: 'setBudget', budget }),
       setTheme: (theme: ThemePreference) => dispatch({ type: 'setTheme', theme }),
+      setCurrency: (next: Currency, convertAmounts: boolean) =>
+        dispatch({ type: 'setCurrency', currency: next, convertAmounts }),
+      setRates: (next: ExchangeRates) => dispatch({ type: 'setRates', rates: next }),
+      setRateOverride: (code: Currency, rate: number | null) =>
+        dispatch({ type: 'setRateOverride', code, rate }),
+      setAutoRefreshRates: (enabled: boolean) =>
+        dispatch({ type: 'setAutoRefreshRates', enabled }),
+      refreshRates,
       addProduct,
       updateProduct: (id: string, patch: Partial<Product>) =>
         dispatch({ type: 'updateProduct', id, patch }),
@@ -78,7 +134,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       replaceData: (data: AppData) => dispatch({ type: 'replaceData', data }),
       resetToSeed: () => dispatch({ type: 'resetToSeed' }),
     }),
-    [addProduct],
+    [addProduct, refreshRates],
   )
 
   const value = useMemo<PlannerContextValue>(

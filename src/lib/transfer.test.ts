@@ -7,7 +7,7 @@ describe('export / import round trip', () => {
   it('restores products, purchases, prices, history and budget', () => {
     const data = {
       ...createInitialData(),
-      settings: { budget: 6000, currency: 'AED' as const, theme: 'dark' as const },
+      settings: { ...createInitialData().settings, budget: 6000, theme: 'dark' as const },
       products: [
         makeProduct({
           name: 'Used iPhone 14 Pro',

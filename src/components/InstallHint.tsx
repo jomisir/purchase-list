@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/Toast'
 import { Card } from '@/components/ui/Card'
 import { IconClose, IconDownload } from '@/components/icons'
 
+// Original key retained so a dismissal made before the rename still counts.
 const DISMISS_KEY = 'dubai-shopping-planner/install-hint-dismissed'
 
 function readDismissed(): boolean {

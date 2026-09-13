@@ -1,6 +1,7 @@
 import type { AppData } from '@/types'
 import type { PersistenceAdapter } from './types'
 
+// Kept under the original name so existing databases are still found.
 const DB_NAME = 'dubai-shopping-planner'
 const DB_VERSION = 1
 const STORE_NAME = 'app-state'

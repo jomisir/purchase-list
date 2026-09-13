@@ -20,7 +20,7 @@ export function budgetStatusCopy(totals: BudgetTotals): {
   if (totals.status === 'over') {
     return {
       label: 'Over budget',
-      detail: `${formatMoney(Math.abs(totals.remaining))} over budget`,
+      detail: `${formatMoney(Math.abs(totals.remaining), totals.currency)} over budget`,
       icon: <IconAlert className="size-4" />,
       className: 'bg-negative-soft text-negative border-negative/25',
     }
@@ -28,14 +28,14 @@ export function budgetStatusCopy(totals: BudgetTotals): {
   if (totals.status === 'approaching') {
     return {
       label: 'Approaching budget limit',
-      detail: `${formatMoney(totals.remaining)} remaining`,
+      detail: `${formatMoney(totals.remaining, totals.currency)} remaining`,
       icon: <IconInfo className="size-4" />,
       className: 'bg-caution-soft text-caution border-caution/25',
     }
   }
   return {
     label: 'Under budget',
-    detail: `${formatMoney(totals.remaining)} remaining`,
+    detail: `${formatMoney(totals.remaining, totals.currency)} remaining`,
     icon: <IconCheck className="size-4" />,
     className: 'bg-positive-soft text-positive border-positive/25',
   }
@@ -79,7 +79,7 @@ export function BudgetSummary({ totals }: { totals: BudgetTotals }) {
     >
       <div className="border-b border-line bg-gradient-to-br from-brand-soft/70 to-surface px-4 py-4 sm:px-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <Figure label="Total budget" value={formatMoney(totals.budget)} emphasis />
+          <Figure label="Total budget" value={formatMoney(totals.budget, totals.currency)} emphasis />
           <span
             className={cx(
               'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold',
@@ -104,17 +104,32 @@ export function BudgetSummary({ totals }: { totals: BudgetTotals }) {
         </div>
       </div>
 
+      {totals.unconverted.length > 0 ? (
+        <p className="flex items-start gap-2.5 border-b border-line bg-caution-soft px-4 py-3 text-[12.5px] leading-relaxed text-ink-soft sm:px-5">
+          <IconAlert className="mt-0.5 size-4 shrink-0 text-caution" />
+          <span>
+            <span className="font-semibold text-caution">
+              {totals.unconverted.length} item{totals.unconverted.length === 1 ? '' : 's'} not counted
+              below.
+            </span>{' '}
+            No exchange rate for{' '}
+            {[...new Set(totals.unconverted.map((item) => item.currency))].join(', ')}. Refresh the
+            rates in Settings, or set one by hand.
+          </span>
+        </p>
+      ) : null}
+
       <dl className="grid grid-cols-2 gap-x-4 gap-y-4 px-4 py-4 sm:grid-cols-4 sm:px-5">
-        <Figure label="Estimated" value={formatMoney(totals.estimatedTotal)} />
-        <Figure label="Spent" value={formatMoney(totals.actualTotal)} tone="text-brand" />
+        <Figure label="Estimated" value={formatMoney(totals.estimatedTotal, totals.currency)} />
+        <Figure label="Spent" value={formatMoney(totals.actualTotal, totals.currency)} tone="text-brand" />
         <Figure
           label="Remaining"
-          value={formatMoney(totals.remaining)}
+          value={formatMoney(totals.remaining, totals.currency)}
           tone={totals.remaining < 0 ? 'text-negative' : 'text-positive'}
         />
         <Figure
           label="Projected total"
-          value={formatMoney(totals.projectedTotal)}
+          value={formatMoney(totals.projectedTotal, totals.currency)}
           tone={totals.projectedTotal > totals.budget ? 'text-caution' : 'text-ink'}
         />
       </dl>

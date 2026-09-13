@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Category, Product } from '@/types'
 import { CATEGORIES } from '@/types'
-import { computeTotals, matchesSearch, priceStats } from '@/lib/calc'
+import { matchesSearch, priceStats } from '@/lib/calc'
 import { formatMoney, formatPercent } from '@/lib/money'
 import { cx } from '@/lib/cx'
-import { usePlanner } from '@/context/plannerContext'
+import { usePlanner, useTotals } from '@/context/plannerContext'
 import { useProductDialogs } from '@/hooks/useProductDialogs'
 import { ProductImage } from '@/components/ProductImage'
 import { PurchaseCheckbox } from '@/components/PurchaseCheckbox'
@@ -64,11 +64,11 @@ function ShoppingRow({
 
           <p className="tnum mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[13.5px]">
             <span className="font-semibold text-ink-soft">
-              Target {formatMoney(product.targetPrice ?? product.estimatedPrice)}
+              Target {formatMoney(product.targetPrice ?? product.estimatedPrice, product.currency)}
             </span>
             {best ? (
               <span className="font-semibold text-positive">
-                Best {formatMoney(best.price)}
+                Best {formatMoney(best.price, best.currency)}
               </span>
             ) : (
               <span className="text-ink-faint">No price logged</span>
@@ -133,7 +133,7 @@ export function ShoppingMode() {
   const [category, setCategory] = useState<Category | 'all'>('all')
   const [hideBought, setHideBought] = useState(true)
 
-  const totals = computeTotals(state.products, state.settings.budget)
+  const totals = useTotals()
 
   const visible = useMemo(
     () =>
@@ -269,7 +269,7 @@ export function ShoppingMode() {
               Spent
             </p>
             <p className="tnum text-[17px] font-semibold text-ink">
-              {formatMoney(totals.actualTotal)}
+              {formatMoney(totals.actualTotal, totals.currency)}
             </p>
           </div>
           <div className="text-right">
@@ -283,8 +283,8 @@ export function ShoppingMode() {
               )}
             >
               {totals.remaining < 0
-                ? `${formatMoney(Math.abs(totals.remaining))} over`
-                : formatMoney(totals.remaining)}
+                ? `${formatMoney(Math.abs(totals.remaining), totals.currency)} over`
+                : formatMoney(totals.remaining, totals.currency)}
             </p>
           </div>
         </div>

@@ -183,11 +183,157 @@ describe('settings and data', () => {
   it('resets to the seed plan but keeps the appearance choice', () => {
     const base: PlannerState = {
       ...hydrated([makeProduct()]),
-      settings: { budget: 9000, currency: 'AED', theme: 'dark' },
+      settings: { ...createInitialData().settings, budget: 9000, theme: 'dark' },
     }
     const state = plannerReducer(base, { type: 'resetToSeed' })
     expect(state.products.length).toBeGreaterThan(20)
     expect(state.settings.budget).toBe(5500)
     expect(state.settings.theme).toBe('dark')
+  })
+})
+
+describe('changing the home currency', () => {
+  const rates = {
+    base: 'AED',
+    values: { AED: 1, USD: 0.25 },
+    updatedAt: '2026-09-13T00:00:00.000Z',
+    source: 'api' as const,
+    overrides: {},
+  }
+
+  function withRates(products = [makeProduct({ estimatedPrice: 100, currency: 'AED' })]) {
+    const base = hydrated(products)
+    return { ...base, settings: { ...base.settings, budget: 4000, rates } }
+  }
+
+  it('converts the budget and every product when asked', () => {
+    const state = plannerReducer(withRates(), {
+      type: 'setCurrency',
+      currency: 'USD',
+      convertAmounts: true,
+    })
+    expect(state.settings.currency).toBe('USD')
+    expect(state.settings.budget).toBeCloseTo(1000, 6)
+    expect(state.products[0].currency).toBe('USD')
+    expect(state.products[0].estimatedPrice).toBeCloseTo(25, 6)
+  })
+
+  it('re-bases the stored rates so conversions keep working', () => {
+    const state = plannerReducer(withRates(), {
+      type: 'setCurrency',
+      currency: 'USD',
+      convertAmounts: true,
+    })
+    expect(state.settings.rates.base).toBe('USD')
+    expect(state.settings.rates.values.USD).toBe(1)
+    expect(state.settings.rates.values.AED).toBeCloseTo(4, 6)
+  })
+
+  it('leaves the numbers alone when only the label should change', () => {
+    const state = plannerReducer(withRates(), {
+      type: 'setCurrency',
+      currency: 'USD',
+      convertAmounts: false,
+    })
+    expect(state.settings.currency).toBe('USD')
+    expect(state.settings.budget).toBe(4000)
+    expect(state.products[0].estimatedPrice).toBe(100)
+    expect(state.products[0].currency).toBe('AED')
+  })
+
+  it('converts price history alongside the product', () => {
+    const product = makeProduct({
+      estimatedPrice: 100,
+      currency: 'AED',
+      priceHistory: [
+        { id: 'r1', productId: 'p', price: 80, currency: 'AED', date: '2026-09-10', source: 'manual' },
+      ],
+    })
+    const state = plannerReducer(withRates([product]), {
+      type: 'setCurrency',
+      currency: 'USD',
+      convertAmounts: true,
+    })
+    expect(state.products[0].priceHistory[0].price).toBeCloseTo(20, 6)
+    expect(state.products[0].priceHistory[0].currency).toBe('USD')
+  })
+
+  it('is a no-op when the currency is unchanged', () => {
+    const before = withRates()
+    expect(plannerReducer(before, { type: 'setCurrency', currency: 'AED', convertAmounts: true })).toBe(
+      before,
+    )
+  })
+})
+
+describe('manual exchange rates', () => {
+  it('stores an override and marks the rates as edited', () => {
+    const state = plannerReducer(hydrated(), { type: 'setRateOverride', code: 'usd', rate: 0.3 })
+    expect(state.settings.rates.values.USD).toBe(0.3)
+    expect(state.settings.rates.overrides?.USD).toBe(0.3)
+    expect(state.settings.rates.source).toBe('manual')
+  })
+
+  it('removes an override when cleared or given nonsense', () => {
+    let state = plannerReducer(hydrated(), { type: 'setRateOverride', code: 'USD', rate: 0.3 })
+    state = plannerReducer(state, { type: 'setRateOverride', code: 'USD', rate: null })
+    expect(state.settings.rates.overrides?.USD).toBeUndefined()
+    state = plannerReducer(state, { type: 'setRateOverride', code: 'EUR', rate: -1 })
+    expect(state.settings.rates.overrides?.EUR).toBeUndefined()
+  })
+})
+
+describe('logging a price in another currency', () => {
+  const rates = {
+    base: 'AED',
+    values: { AED: 1, USD: 0.25 },
+    updatedAt: '2026-09-13T00:00:00.000Z',
+    source: 'api' as const,
+    overrides: {},
+  }
+
+  function withRates(product: ReturnType<typeof makeProduct>) {
+    const base = hydrated([product])
+    return { ...base, settings: { ...base.settings, rates } }
+  }
+
+  it('converts the sighting into the product’s own currency', () => {
+    // $60 at 4 AED to the dollar is AED 240 — not "AED 60".
+    const state = plannerReducer(
+      withRates(makeProduct({ id: 'p1', currency: 'AED', estimatedPrice: 230 })),
+      { type: 'addPriceRecord', productId: 'p1', draft: { price: 60, currency: 'USD', date: '2026-09-12' } },
+    )
+    expect(state.products[0].currentPrice).toBeCloseTo(240, 6)
+    // The record itself keeps the currency it was actually seen in.
+    expect(state.products[0].priceHistory[0].currency).toBe('USD')
+    expect(state.products[0].priceHistory[0].price).toBe(60)
+  })
+
+  it('leaves the current price alone when no rate can convert the sighting', () => {
+    let state = plannerReducer(
+      withRates(makeProduct({ id: 'p1', currency: 'AED', currentPrice: 200 })),
+      { type: 'addPriceRecord', productId: 'p1', draft: { price: 5000, currency: 'JPY', date: '2026-09-12' } },
+    )
+    // No AED/JPY rate exists, so 5000 must not be adopted as an AED price.
+    expect(state.products[0].currentPrice).toBe(200)
+    expect(state.products[0].priceHistory).toHaveLength(1)
+
+    // Once a rate exists the next sighting converts normally.
+    state = plannerReducer(state, { type: 'setRateOverride', code: 'JPY', rate: 40 })
+    state = plannerReducer(state, {
+      type: 'addPriceRecord',
+      productId: 'p1',
+      draft: { price: 4000, currency: 'JPY', date: '2026-09-13' },
+    })
+    expect(state.products[0].currentPrice).toBeCloseTo(100, 6)
+  })
+
+  it('defaults a sighting to the product’s currency when none is given', () => {
+    const state = plannerReducer(
+      withRates(makeProduct({ id: 'p1', currency: 'USD' })),
+      { type: 'addPriceRecord', productId: 'p1', draft: { price: 42, date: '2026-09-12' } },
+    )
+    expect(state.products[0].priceHistory[0].currency).toBe('USD')
+    expect(state.products[0].currentPrice).toBe(42)
   })
 })

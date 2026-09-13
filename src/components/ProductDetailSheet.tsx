@@ -53,7 +53,7 @@ export function ProductDetailSheet({
   const canDelete = !product.purchased
   const targetRange =
     product.targetMin != null && product.targetMax != null
-      ? `${formatMoney(product.targetMin)} – ${formatMoney(product.targetMax)}`
+      ? `${formatMoney(product.targetMin, product.currency)} – ${formatMoney(product.targetMax, product.currency)}`
       : null
 
   function handleDelete() {
@@ -122,19 +122,19 @@ export function ProductDetailSheet({
             <dl>
               <Row
                 label={product.quantity > 1 ? 'Estimated (per unit)' : 'Estimated price'}
-                value={formatMoney(product.estimatedPrice)}
+                value={formatMoney(product.estimatedPrice, product.currency)}
               />
               {product.quantity > 1 ? (
-                <Row label="Estimated line total" value={formatMoney(lineEstimate(product))} />
+                <Row label="Estimated line total" value={formatMoney(lineEstimate(product), product.currency)} />
               ) : null}
               <Row
                 label="Target price"
-                value={product.targetPrice == null ? 'Not set' : formatMoney(product.targetPrice)}
+                value={product.targetPrice == null ? 'Not set' : formatMoney(product.targetPrice, product.currency)}
               />
               {targetRange ? <Row label="Target range" value={targetRange} /> : null}
               <Row
                 label="Current price"
-                value={product.currentPrice == null ? 'Not checked yet' : formatMoney(product.currentPrice)}
+                value={product.currentPrice == null ? 'Not checked yet' : formatMoney(product.currentPrice, product.currency)}
                 tone={product.currentPrice == null ? 'text-ink-muted' : 'text-brand'}
               />
               {vsTarget != null ? (
@@ -143,7 +143,7 @@ export function ProductDetailSheet({
                   value={
                     vsTarget === 0
                       ? 'Exactly on target'
-                      : `${formatMoney(Math.abs(vsTarget))} ${vsTarget < 0 ? 'under' : 'over'}`
+                      : `${formatMoney(Math.abs(vsTarget), product.currency)} ${vsTarget < 0 ? 'under' : 'over'}`
                   }
                   tone={vsTarget <= 0 ? 'text-positive' : 'text-negative'}
                 />
@@ -151,7 +151,7 @@ export function ProductDetailSheet({
               {product.purchased ? (
                 <Row
                   label="Price paid"
-                  value={product.actualPrice == null ? 'Not recorded' : formatMoney(product.actualPrice)}
+                  value={product.actualPrice == null ? 'Not recorded' : formatMoney(product.actualPrice, product.currency)}
                   tone="text-positive"
                 />
               ) : null}
@@ -161,16 +161,16 @@ export function ProductDetailSheet({
                   value={
                     difference.direction === 'equal'
                       ? 'Exactly on estimate'
-                      : `${formatMoney(Math.abs(difference.amount))} ${difference.direction === 'saved' ? 'saved' : 'over'}`
+                      : `${formatMoney(Math.abs(difference.amount), product.currency)} ${difference.direction === 'saved' ? 'saved' : 'over'}`
                   }
                   tone={difference.direction === 'over' ? 'text-negative' : 'text-positive'}
                 />
               ) : null}
               {stats.lowest != null ? (
-                <Row label="Lowest recorded" value={formatMoney(stats.lowest)} tone="text-positive" />
+                <Row label="Lowest recorded" value={formatMoney(stats.lowest, product.currency)} tone="text-positive" />
               ) : null}
               {stats.highest != null ? (
-                <Row label="Highest recorded" value={formatMoney(stats.highest)} />
+                <Row label="Highest recorded" value={formatMoney(stats.highest, product.currency)} />
               ) : null}
               <Row label="Store" value={product.store ?? 'Not set'} />
               <Row
