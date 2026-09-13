@@ -4,17 +4,21 @@ import { formatMoney } from '@/lib/money'
 import { isoDate } from '@/lib/date'
 import { ImportError, parseImport, serializeExport } from '@/lib/transfer'
 import { cx } from '@/lib/cx'
-import { usePlanner, useTotals } from '@/context/plannerContext'
+import { computeTotals } from '@/lib/calc'
+import { useCurrency, useLists, usePlanner } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
 import { Card, SectionHeading } from '@/components/ui/Card'
 import { InstallPanel } from '@/components/InstallPanel'
 import { CurrencyPanel } from '@/components/CurrencyPanel'
+import { BROWSE, CREATE, ListManagerModal, useListCounts, type ListManagerView } from '@/components/ListManager'
 import { Button } from '@/components/ui/Button'
 import {
   IconAlert,
   IconDownload,
   IconInfo,
+  IconLists,
   IconMoon,
+  IconPlus,
   IconRefresh,
   IconSettings,
   IconSun,
@@ -34,12 +38,25 @@ export function Settings() {
   const [importError, setImportError] = useState<string | null>(null)
   const [confirmingReset, setConfirmingReset] = useState(false)
 
-  const totals = useTotals()
+  const { lists } = useLists()
+  const counts = useListCounts()
+  const currency = useCurrency()
+  const [managerView, setManagerView] = useState<ListManagerView | null>(null)
   const priceRecords = state.products.reduce(
     (total, product) => total + product.priceHistory.length,
     0,
   )
   const customCount = state.products.filter((product) => product.isCustom).length
+
+  // This section is about what is stored on the device, so it counts every
+  // list — unlike the rest of the app, which shows the one you have open.
+  const everything = computeTotals(
+    state.products,
+    lists.reduce((total, list) => total + list.budget, 0),
+    state.settings.currency,
+    state.settings.rates,
+    state.settings.alertThreshold,
+  )
 
   function handleExport() {
     const { hydrated: _hydrated, ...data } = state
@@ -103,6 +120,52 @@ export function Settings() {
 
       <section>
         <SectionHeading
+          title="Your lists"
+          hint="Each list has its own items and its own budget. Currency and appearance are shared."
+        />
+        <Card className="divide-y divide-line">
+          {lists.map((list) => {
+            const count = counts[list.id] ?? { total: 0, purchased: 0 }
+            return (
+              <div key={list.id} className="flex items-center gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[14px] font-semibold text-ink">{list.name}</p>
+                  <p className="tnum mt-0.5 text-[12.5px] text-ink-muted">
+                    {count.purchased}/{count.total} bought · {formatMoney(list.budget, currency)}{' '}
+                    budget
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setManagerView({ kind: 'edit', listId: list.id })}
+                >
+                  Edit
+                </Button>
+              </div>
+            )
+          })}
+          <div className="flex flex-wrap gap-2 px-4 py-3">
+            <Button size="sm" onClick={() => setManagerView(CREATE)}>
+              <IconPlus className="size-4" />
+              New list
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => setManagerView(BROWSE)}>
+              <IconLists className="size-4" />
+              Switch list
+            </Button>
+          </div>
+        </Card>
+      </section>
+
+      <ListManagerModal
+        open={managerView !== null}
+        initialView={managerView ?? BROWSE}
+        onClose={() => setManagerView(null)}
+      />
+
+      <section>
+        <SectionHeading
           title="Install on your phone"
           hint="Use it like an app, with or without a signal."
         />
@@ -152,13 +215,20 @@ export function Settings() {
         />
         <Card className="divide-y divide-line">
           {[
+            ...(lists.length > 1 ? [{ label: 'Lists', value: String(lists.length) }] : []),
             { label: 'Products', value: String(state.products.length) },
             { label: 'Custom products', value: String(customCount) },
-            { label: 'Purchased', value: `${totals.purchasedCount} of ${totals.totalCount}` },
+            {
+              label: 'Purchased',
+              value: `${everything.purchasedCount} of ${everything.totalCount}`,
+            },
             { label: 'Price records', value: String(priceRecords) },
             { label: 'Currency', value: state.settings.currency },
-            { label: 'Budget', value: formatMoney(state.settings.budget, state.settings.currency) },
-            { label: 'Spent', value: formatMoney(totals.actualTotal, totals.currency) },
+            {
+              label: lists.length > 1 ? 'Budgets combined' : 'Budget',
+              value: formatMoney(everything.budget, state.settings.currency),
+            },
+            { label: 'Spent', value: formatMoney(everything.actualTotal, everything.currency) },
             { label: 'Storage', value: storageName },
           ].map((row) => (
             <div key={row.label} className="flex items-baseline justify-between gap-4 px-4 py-2.5">
@@ -215,7 +285,11 @@ export function Settings() {
         <Card className="space-y-3 p-4 sm:p-5">
           <p className="text-[13px] leading-relaxed text-ink-soft">
             Restore the starter plan. This deletes your custom products, purchases and every
-            price you have logged. Export a backup first if you might want it back.
+            price you have logged
+            {lists.length > 1
+              ? `, and removes all ${lists.length} of your lists — you are left with one fresh list`
+              : ''}
+            . Export a backup first if you might want it back.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Button

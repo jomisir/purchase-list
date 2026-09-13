@@ -4,7 +4,7 @@ import { dealStatus, priceStats, storeComparison, targetDifference } from '@/lib
 import { formatMoney } from '@/lib/money'
 import { formatRelativeDay } from '@/lib/date'
 import { cx } from '@/lib/cx'
-import { usePlanner } from '@/context/plannerContext'
+import { useProducts } from '@/context/plannerContext'
 import { useProductDialogs } from '@/hooks/useProductDialogs'
 import {
   DEFAULT_FILTERS,
@@ -195,23 +195,23 @@ function TrackerRow({
 }
 
 export function PriceTracker() {
-  const { state } = usePlanner()
+  const products = useProducts()
   const [filters, setFilters] = useState<ListFilters>({ ...DEFAULT_FILTERS, sort: 'bestVsTarget' })
-  const visible = useFilteredProducts(state.products, filters)
+  const visible = useFilteredProducts(products, filters)
   const { dialogs, openDetails, openLogPrice } = useProductDialogs()
 
   const summary = useMemo(() => {
-    const tracked = state.products.filter((product) => product.priceHistory.length > 0)
-    const records = state.products.reduce(
+    const tracked = products.filter((product) => product.priceHistory.length > 0)
+    const records = products.reduce(
       (total, product) => total + product.priceHistory.length,
       0,
     )
-    const deals = state.products.filter((product) => {
+    const deals = products.filter((product) => {
       const status = dealStatus(product)
       return status === 'good' || status === 'great'
     }).length
     return { tracked: tracked.length, records, deals }
-  }, [state.products])
+  }, [products])
 
   return (
     <div className="space-y-4">
@@ -227,7 +227,7 @@ export function PriceTracker() {
 
       <dl className="grid grid-cols-3 gap-2.5">
         {[
-          { label: 'Products tracked', value: `${summary.tracked}/${state.products.length}` },
+          { label: 'Products tracked', value: `${summary.tracked}/${products.length}` },
           { label: 'Prices logged', value: String(summary.records) },
           { label: 'Below target', value: String(summary.deals) },
         ].map((item) => (
@@ -243,7 +243,7 @@ export function PriceTracker() {
       <FilterBar
         filters={filters}
         onChange={setFilters}
-        products={state.products}
+        products={products}
         resultCount={visible.length}
       />
 

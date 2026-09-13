@@ -7,7 +7,8 @@ describe('export / import round trip', () => {
   it('restores products, purchases, prices, history and budget', () => {
     const data = {
       ...createInitialData(),
-      settings: { ...createInitialData().settings, budget: 6000, theme: 'dark' as const },
+      settings: { ...createInitialData().settings, theme: 'dark' as const },
+      lists: createInitialData().lists.map((list) => ({ ...list, budget: 6000 })),
       products: [
         makeProduct({
           name: 'Used iPhone 14 Pro',
@@ -23,7 +24,7 @@ describe('export / import round trip', () => {
     const result = parseImport(serializeExport(data))
     expect(result.productCount).toBe(1)
     expect(result.skipped).toBe(0)
-    expect(result.data.settings.budget).toBe(6000)
+    expect(result.data.lists[0].budget).toBe(6000)
     expect(result.data.settings.theme).toBe('dark')
 
     const product = result.data.products[0]

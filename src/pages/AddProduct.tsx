@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { usePlanner } from '@/context/plannerContext'
+import { useLists, usePlanner } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
 import { ProductForm } from '@/components/ProductForm'
 import { Card } from '@/components/ui/Card'
@@ -7,6 +7,7 @@ import { IconInfo } from '@/components/icons'
 
 export function AddProduct() {
   const { actions } = usePlanner()
+  const { lists, activeId } = useLists()
   const toast = useToast()
   const navigate = useNavigate()
 
@@ -32,9 +33,17 @@ export function AddProduct() {
       <Card className="p-4 sm:p-5">
         <ProductForm
           submitLabel="Add product"
-          onSubmit={(draft) => {
-            actions.addProduct(draft)
-            toast.success(`${draft.name} added to your plan.`)
+          onSubmit={(draft, values) => {
+            const id = actions.addProduct(draft)
+            // New products land on the open list; a different one was picked
+            // deliberately, so move it rather than switching the whole app over.
+            const target = lists.find((list) => list.id === values.listId)
+            if (target && target.id !== activeId) {
+              actions.moveProduct(id, target.id)
+              toast.success(`${draft.name} added to “${target.name}”.`)
+            } else {
+              toast.success(`${draft.name} added to your plan.`)
+            }
             navigate('/list')
           }}
           onCancel={() => navigate(-1)}

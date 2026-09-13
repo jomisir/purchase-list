@@ -1,5 +1,5 @@
 import type { Product } from '@/types'
-import { usePlanner } from '@/context/plannerContext'
+import { useLists, usePlanner } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
 import { Modal } from '@/components/ui/Modal'
 import { ProductForm } from '@/components/ProductForm'
@@ -14,6 +14,7 @@ export function EditProductDialog({
   onClose: () => void
 }) {
   const { actions } = usePlanner()
+  const { lists } = useLists()
   const toast = useToast()
   if (!product) return null
 
@@ -24,7 +25,7 @@ export function EditProductDialog({
         product={product}
         submitLabel="Save changes"
         onCancel={onClose}
-        onSubmit={(draft) => {
+        onSubmit={(draft, values) => {
           actions.updateProduct(product.id, {
             ...draft,
             // Keep the original provenance — editing never turns a planned item
@@ -32,7 +33,13 @@ export function EditProductDialog({
             isCustom: product.isCustom,
             purchasedAt: draft.purchased ? (product.purchasedAt ?? new Date().toISOString()) : null,
           })
-          toast.success('Product updated.')
+          const target = lists.find((list) => list.id === values.listId)
+          if (target && target.id !== product.listId) {
+            actions.moveProduct(product.id, target.id)
+            toast.success(`Moved to “${target.name}”.`)
+          } else {
+            toast.success('Product updated.')
+          }
           onClose()
         }}
       />

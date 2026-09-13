@@ -112,3 +112,6 @@ export const IconSparkle = (p: SVGProps<SVGSVGElement>) => (
 export const IconClipboard = (p: SVGProps<SVGSVGElement>) => (
   <Icon {...p}><path d="M9 4.5h6M9 4.5A1.5 1.5 0 0 0 7.5 6v.5h9V6A1.5 1.5 0 0 0 15 4.5" /><path d="M7.5 6H6a1.5 1.5 0 0 0-1.5 1.5v11A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 18 6h-1.5" /><path d="M8.5 12h7M8.5 16h4" /></Icon>
 )
+export const IconLists = (p: SVGProps<SVGSVGElement>) => (
+  <Icon {...p}><path d="M8 5h12M8 12h12M8 19h12M3.5 5h.01M3.5 12h.01M3.5 19h.01" /></Icon>
+)

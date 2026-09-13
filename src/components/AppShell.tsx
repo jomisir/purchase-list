@@ -4,6 +4,7 @@ import { useTotals } from '@/context/plannerContext'
 import { formatMoney } from '@/lib/money'
 import { cx } from '@/lib/cx'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { ListTabs } from '@/components/ListTabs'
 import {
   IconCart,
   IconHome,
@@ -153,6 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="lg:pl-60">
         <div className="mx-auto w-full max-w-5xl px-gutter pt-4 pb-32 lg:pt-8 lg:pb-12">
+          <ListTabs />
           {children}
         </div>
       </main>

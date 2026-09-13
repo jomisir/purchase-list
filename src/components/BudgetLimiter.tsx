@@ -3,7 +3,7 @@ import type { BudgetTotals } from '@/types'
 import { MAX_ALERT_THRESHOLD, MIN_ALERT_THRESHOLD } from '@/lib/calc'
 import { formatMoney, formatPercent } from '@/lib/money'
 import { cx } from '@/lib/cx'
-import { usePlanner } from '@/context/plannerContext'
+import { useBudget, usePlanner } from '@/context/plannerContext'
 import { Card } from '@/components/ui/Card'
 import { budgetStatusCopy } from '@/components/BudgetSummary'
 import { IconAlert, IconInfo } from '@/components/icons'
@@ -29,9 +29,9 @@ function ceilingFor(estimated: number, budget: number): number {
  * 80% with no way to move it.
  */
 export function BudgetLimiter({ totals }: { totals: BudgetTotals }) {
-  const { state, actions } = usePlanner()
+  const { actions } = usePlanner()
   const { currency } = totals
-  const budget = state.settings.budget
+  const budget = useBudget()
   const threshold = totals.alertThreshold
 
   const max = useMemo(

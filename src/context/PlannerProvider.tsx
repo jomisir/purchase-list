@@ -111,7 +111,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
 
   const actions = useMemo<PlannerActions>(
     () => ({
-      setBudget: (budget: number) => dispatch({ type: 'setBudget', budget }),
+      setBudget: (budget: number, listId?: string) => dispatch({ type: 'setBudget', budget, listId }),
       setTheme: (theme: ThemePreference) => dispatch({ type: 'setTheme', theme }),
       setCurrency: (next: Currency, convertAmounts: boolean) =>
         dispatch({ type: 'setCurrency', currency: next, convertAmounts }),
@@ -122,6 +122,14 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'setAutoRefreshRates', enabled }),
       setAlertThreshold: (threshold: number) =>
         dispatch({ type: 'setAlertThreshold', threshold }),
+      setActiveList: (listId: string) => dispatch({ type: 'setActiveList', listId }),
+      createList: (name: string, budget: number, copyStarter: boolean) =>
+        dispatch({ type: 'createList', name, budget, copyStarter }),
+      renameList: (listId: string, name: string) =>
+        dispatch({ type: 'renameList', listId, name }),
+      deleteList: (listId: string) => dispatch({ type: 'deleteList', listId }),
+      moveProduct: (productId: string, listId: string) =>
+        dispatch({ type: 'moveProduct', productId, listId }),
       refreshRates,
       addProduct,
       updateProduct: (id: string, patch: Partial<Product>) =>

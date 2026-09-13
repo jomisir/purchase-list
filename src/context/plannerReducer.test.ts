@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { createInitialData, initialState, plannerReducer, type PlannerState } from '@/context/plannerReducer'
+import {
+  activeBudget,
+  createInitialData,
+  initialState,
+  plannerReducer,
+  type PlannerState,
+} from '@/context/plannerReducer'
 import { computeTotals } from '@/lib/calc'
 import { makeProduct } from '@/lib/testUtils'
 import { parseImport, serializeExport } from '@/lib/transfer'
@@ -32,7 +38,7 @@ describe('hydrate', () => {
     const state = plannerReducer(initialState, { type: 'hydrate', data: null })
     expect(state.hydrated).toBe(true)
     expect(state.products.length).toBeGreaterThan(20)
-    expect(state.settings.budget).toBe(5500)
+    expect(activeBudget(state)).toBe(5500)
   })
 
   it('restores stored data as-is', () => {
@@ -170,8 +176,8 @@ describe('price records', () => {
 
 describe('settings and data', () => {
   it('sets the budget and never lets it go negative', () => {
-    expect(plannerReducer(hydrated(), { type: 'setBudget', budget: 7000 }).settings.budget).toBe(7000)
-    expect(plannerReducer(hydrated(), { type: 'setBudget', budget: -10 }).settings.budget).toBe(0)
+    expect(activeBudget(plannerReducer(hydrated(), { type: 'setBudget', budget: 7000 }))).toBe(7000)
+    expect(activeBudget(plannerReducer(hydrated(), { type: 'setBudget', budget: -10 }))).toBe(0)
   })
 
   it('replaces everything on import', () => {
@@ -184,11 +190,11 @@ describe('settings and data', () => {
   it('resets to the seed plan but keeps the appearance choice', () => {
     const base: PlannerState = {
       ...hydrated([makeProduct()]),
-      settings: { ...createInitialData().settings, budget: 9000, theme: 'dark' },
+      settings: { ...createInitialData().settings, theme: 'dark' },
     }
     const state = plannerReducer(base, { type: 'resetToSeed' })
     expect(state.products.length).toBeGreaterThan(20)
-    expect(state.settings.budget).toBe(5500)
+    expect(activeBudget(state)).toBe(5500)
     expect(state.settings.theme).toBe('dark')
   })
 })
@@ -204,7 +210,11 @@ describe('changing the home currency', () => {
 
   function withRates(products = [makeProduct({ estimatedPrice: 100, currency: 'AED' })]) {
     const base = hydrated(products)
-    return { ...base, settings: { ...base.settings, budget: 4000, rates } }
+    return {
+      ...base,
+      lists: base.lists.map((list) => ({ ...list, budget: 4000 })),
+      settings: { ...base.settings, rates },
+    }
   }
 
   it('converts the budget and every product when asked', () => {
@@ -214,7 +224,7 @@ describe('changing the home currency', () => {
       convertAmounts: true,
     })
     expect(state.settings.currency).toBe('USD')
-    expect(state.settings.budget).toBeCloseTo(1000, 6)
+    expect(activeBudget(state)).toBeCloseTo(1000, 6)
     expect(state.products[0].currency).toBe('USD')
     expect(state.products[0].estimatedPrice).toBeCloseTo(25, 6)
   })
@@ -237,7 +247,7 @@ describe('changing the home currency', () => {
       convertAmounts: false,
     })
     expect(state.settings.currency).toBe('USD')
-    expect(state.settings.budget).toBe(4000)
+    expect(activeBudget(state)).toBe(4000)
     expect(state.products[0].estimatedPrice).toBe(100)
     expect(state.products[0].currency).toBe('AED')
   })

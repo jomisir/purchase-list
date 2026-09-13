@@ -1,6 +1,7 @@
 import type {
   AppData,
   Currency,
+  ShoppingListMeta,
   ExchangeRates,
   PriceRecord,
   Product,
@@ -13,6 +14,7 @@ import { APPROACHING_THRESHOLD, clampThreshold, compareRecordDate } from '@/lib/
 import { createSeedProducts, DEFAULT_BUDGET, DEFAULT_CURRENCY, SEED_VERSION } from '@/data/seed'
 import { convert, emptyRates, rebase } from '@/lib/rates'
 import { DATA_VERSION } from '@/lib/transfer'
+import { createList, DEFAULT_LIST_NAME, MAX_LISTS, migrateToLists } from '@/lib/lists'
 
 export interface PlannerState extends AppData {
   /** False until storage has been read, so the UI can avoid a flash of seed data. */
@@ -22,6 +24,7 @@ export interface PlannerState extends AppData {
 export type ProductDraft = Omit<
   Product,
   | 'id'
+  | 'listId'
   | 'dateAdded'
   | 'lastUpdated'
   | 'priceHistory'
@@ -37,13 +40,18 @@ export type PriceRecordDraft = Omit<PriceRecord, 'id' | 'productId' | 'currency'
 
 export type PlannerAction =
   | { type: 'hydrate'; data: AppData | null }
-  | { type: 'setBudget'; budget: number }
+  | { type: 'setBudget'; budget: number; listId?: string }
   | { type: 'setTheme'; theme: ThemePreference }
   | { type: 'setCurrency'; currency: Currency; convertAmounts: boolean }
   | { type: 'setRates'; rates: ExchangeRates }
   | { type: 'setRateOverride'; code: Currency; rate: number | null }
   | { type: 'setAutoRefreshRates'; enabled: boolean }
   | { type: 'setAlertThreshold'; threshold: number }
+  | { type: 'setActiveList'; listId: string }
+  | { type: 'createList'; name: string; budget: number; copyStarter: boolean; id?: string }
+  | { type: 'renameList'; listId: string; name: string }
+  | { type: 'deleteList'; listId: string }
+  | { type: 'moveProduct'; productId: string; listId: string }
   | { type: 'addProduct'; draft: ProductDraft; id?: string }
   | { type: 'updateProduct'; id: string; patch: Partial<Product> }
   | { type: 'deleteProduct'; id: string }
@@ -55,7 +63,6 @@ export type PlannerAction =
 
 export function defaultSettings(): Settings {
   return {
-    budget: DEFAULT_BUDGET,
     currency: DEFAULT_CURRENCY,
     theme: 'system',
     rates: emptyRates(DEFAULT_CURRENCY),
@@ -65,9 +72,12 @@ export function defaultSettings(): Settings {
 }
 
 export function createInitialData(): AppData {
+  const list = createList(DEFAULT_LIST_NAME, DEFAULT_BUDGET)
   return {
     version: DATA_VERSION,
-    products: createSeedProducts(),
+    lists: [list],
+    activeListId: list.id,
+    products: createSeedProducts().map((product) => ({ ...product, listId: list.id })),
     settings: defaultSettings(),
     seedVersion: SEED_VERSION,
   }
@@ -77,6 +87,16 @@ export const initialState: PlannerState = {
   ...createInitialData(),
   products: [],
   hydrated: false,
+}
+
+/** Products of the list currently being viewed. */
+export function activeProducts(state: PlannerState): Product[] {
+  return state.products.filter((product) => product.listId === state.activeListId)
+}
+
+/** The active list's own budget. */
+export function activeBudget(state: PlannerState): number {
+  return state.lists.find((list) => list.id === state.activeListId)?.budget ?? 0
 }
 
 /**
@@ -149,14 +169,78 @@ export function plannerReducer(state: PlannerState, action: PlannerAction): Plan
   switch (action.type) {
     case 'hydrate': {
       const data = action.data ?? createInitialData()
-      return { ...data, hydrated: true }
+      return { ...data, ...migrateToLists(data), hydrated: true }
     }
 
-    case 'setBudget':
+    case 'setBudget': {
+      // The budget belongs to a list, not to the app. Without a list named it
+      // is the one being viewed — naming one lets Settings edit a list you are
+      // not currently in without dragging you over to it.
+      const budget = Math.max(0, action.budget)
+      const target = action.listId ?? state.activeListId
       return {
         ...state,
-        settings: { ...state.settings, budget: Math.max(0, action.budget) },
+        lists: state.lists.map((list) => (list.id === target ? { ...list, budget } : list)),
       }
+    }
+
+    case 'setActiveList':
+      return state.lists.some((list) => list.id === action.listId)
+        ? { ...state, activeListId: action.listId }
+        : state
+
+    case 'createList': {
+      if (state.lists.length >= MAX_LISTS) return state
+      const list: ShoppingListMeta = {
+        ...createList(action.name, action.budget),
+        ...(action.id ? { id: action.id } : {}),
+      }
+      const products = action.copyStarter
+        ? createSeedProducts().map((product) => ({
+            ...product,
+            id: `${list.id}__${product.id}`,
+            listId: list.id,
+          }))
+        : []
+      return {
+        ...state,
+        lists: [...state.lists, list],
+        activeListId: list.id,
+        products: [...state.products, ...products],
+      }
+    }
+
+    case 'renameList': {
+      const name = action.name.trim()
+      if (!name) return state
+      return {
+        ...state,
+        lists: state.lists.map((list) =>
+          list.id === action.listId ? { ...list, name } : list,
+        ),
+      }
+    }
+
+    case 'deleteList': {
+      // Never leave the app with nowhere to put a product.
+      if (state.lists.length <= 1) return state
+      if (!state.lists.some((list) => list.id === action.listId)) return state
+      const lists = state.lists.filter((list) => list.id !== action.listId)
+      return {
+        ...state,
+        lists,
+        products: state.products.filter((product) => product.listId !== action.listId),
+        activeListId: state.activeListId === action.listId ? lists[0].id : state.activeListId,
+      }
+    }
+
+    case 'moveProduct': {
+      if (!state.lists.some((list) => list.id === action.listId)) return state
+      return mapProduct(state, action.productId, (product) => ({
+        ...product,
+        listId: action.listId,
+      }))
+    }
 
     case 'setTheme':
       return { ...state, settings: { ...state.settings, theme: action.theme } }
@@ -169,7 +253,12 @@ export function plannerReducer(state: PlannerState, action: PlannerAction): Plan
 
       // Re-basing the budget keeps its real value; without a rate the number is
       // kept as typed rather than silently becoming a different amount.
-      const budgetInNext = convertOrNull(state.settings.budget, previous, next, state.settings.rates)
+      const convertBudgets = (lists: ShoppingListMeta[]) =>
+        lists.map((list) => ({
+          ...list,
+          budget:
+            convertOrNull(list.budget, previous, next, state.settings.rates) ?? list.budget,
+        }))
 
       if (!action.convertAmounts) {
         return {
@@ -204,12 +293,8 @@ export function plannerReducer(state: PlannerState, action: PlannerAction): Plan
       return {
         ...state,
         products,
-        settings: {
-          ...state.settings,
-          currency: next,
-          budget: budgetInNext ?? state.settings.budget,
-          rates,
-        },
+        lists: convertBudgets(state.lists),
+        settings: { ...state.settings, currency: next, rates },
       }
     }
 
@@ -254,6 +339,7 @@ export function plannerReducer(state: PlannerState, action: PlannerAction): Plan
       const timestamp = nowIso()
       const product: Product = {
         ...action.draft,
+        listId: state.activeListId,
         id: action.id ?? createId('product'),
         currency: action.draft.currency ?? DEFAULT_CURRENCY,
         purchased: action.draft.purchased ?? false,
@@ -356,14 +442,23 @@ export function plannerReducer(state: PlannerState, action: PlannerAction): Plan
       })
 
     case 'replaceData':
-      return { ...action.data, hydrated: true }
+      return { ...action.data, ...migrateToLists(action.data), hydrated: true }
 
-    case 'resetToSeed':
+    case 'resetToSeed': {
+      const fresh = createInitialData()
       return {
-        ...createInitialData(),
-        settings: { ...defaultSettings(), theme: state.settings.theme },
+        ...fresh,
+        settings: {
+          ...defaultSettings(),
+          theme: state.settings.theme,
+          currency: state.settings.currency,
+          rates: state.settings.rates,
+          autoRefreshRates: state.settings.autoRefreshRates,
+          alertThreshold: state.settings.alertThreshold,
+        },
         hydrated: true,
       }
+    }
 
     default:
       return state

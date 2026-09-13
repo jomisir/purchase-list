@@ -8,9 +8,10 @@ import type {
   Settings,
 } from '@/types'
 import { CATEGORIES } from '@/types'
-import { DEFAULT_BUDGET, DEFAULT_CURRENCY, SEED_VERSION } from '@/data/seed'
+import { DEFAULT_CURRENCY, SEED_VERSION } from '@/data/seed'
 import { createId } from '@/lib/id'
 import { emptyRates } from '@/lib/rates'
+import { migrateToLists } from '@/lib/lists'
 import { APPROACHING_THRESHOLD, clampThreshold } from '@/lib/calc'
 import { isKnownCurrency } from '@/lib/currency'
 import { isoDate, nowIso } from '@/lib/date'
@@ -118,6 +119,9 @@ export function normalizeProduct(value: unknown): Product | null {
 
   return {
     id,
+    // A missing or unknown list is repaired by the migration below, which
+    // adopts the product rather than dropping it.
+    listId: typeof value.listId === 'string' ? value.listId : '',
     name,
     category: asCategory(value.category),
     brand: asOptionalString(value.brand),
@@ -182,17 +186,24 @@ function normalizeRates(value: unknown, base: string): ExchangeRates {
 
 function normalizeSettings(value: unknown): Settings {
   const settings = isObject(value) ? value : {}
-  const budget = asFiniteNumber(settings.budget)
   const theme = settings.theme
   const currency = asCurrency(settings.currency, DEFAULT_CURRENCY)
+  // Any budget found here belongs to the pre-lists shape and is picked up by
+  // `legacyBudget` below, which hands it to the list the migration creates.
   return {
-    budget: budget != null && budget >= 0 ? budget : DEFAULT_BUDGET,
     currency,
     theme: theme === 'light' || theme === 'dark' || theme === 'system' ? theme : 'system',
     rates: normalizeRates(settings.rates, currency),
     autoRefreshRates: settings.autoRefreshRates !== false,
     alertThreshold: clampThreshold(asFiniteNumber(settings.alertThreshold) ?? APPROACHING_THRESHOLD),
   }
+}
+
+/** The pre-lists shape kept a single global budget on settings. */
+function legacyBudget(value: unknown): number | undefined {
+  if (!isObject(value)) return undefined
+  const budget = asFiniteNumber(value.budget)
+  return budget != null && budget >= 0 ? budget : undefined
 }
 
 /** Defensive read of whatever came back from storage. */
@@ -203,10 +214,23 @@ export function normalizeAppData(value: unknown): AppData | null {
   const products = rawProducts
     .map(normalizeProduct)
     .filter((product): product is Product => product !== null)
+  const settings = normalizeSettings(value.settings)
+
+  // Older exports have no lists at all; everything in them becomes one list,
+  // carrying across whatever global budget that file was saved with.
+  const migrated = migrateToLists({
+    products,
+    settings: { budget: legacyBudget(value.settings) },
+    lists: value.lists,
+    activeListId: value.activeListId,
+  })
+
   return {
     version: asPositive(value.version, DATA_VERSION),
-    products,
-    settings: normalizeSettings(value.settings),
+    lists: migrated.lists,
+    activeListId: migrated.activeListId,
+    products: migrated.products,
+    settings,
     seedVersion: asPositive(value.seedVersion, SEED_VERSION),
   }
 }

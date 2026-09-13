@@ -14,6 +14,11 @@ mall basement. Everything is stored on your own device; nothing is uploaded.
 
 ## What it does
 
+- **Separate lists** — keep one list per trip or per person: your own shopping,
+  a friend's, gifts for someone. Each list holds its own items and its own
+  budget; currency, appearance and exchange rates stay shared. A strip above
+  every screen switches between them, and products can be moved from one to
+  another.
 - **Dashboard** — total budget, estimated total, spent, remaining, percentage
   used, completion, deals found and spending per category. Every figure is
   derived from the product list; nothing is hard-coded into the UI.
@@ -36,7 +41,9 @@ mall basement. Everything is stored on your own device; nothing is uploaded.
 - **Currency** — pick any ISO currency for your budget and totals, price
   individual items in whatever currency you saw them in, and let the app convert.
   Exchange rates refresh from a live source in the background.
-- **Settings** — appearance, JSON export/import, reset to the starter plan.
+- **Settings** — your lists, appearance, JSON export/import, reset to the
+  starter plan. The "Your data" figures there deliberately count every list,
+  unlike the rest of the app, which shows the list you have open.
 - **Dark mode** — a switch on the dashboard, plus a three-way choice (system /
   light / dark) in Settings. The switch shows what you are actually looking at,
   so while the device is still in charge it is marked "Auto".
@@ -131,11 +138,12 @@ prefix, service worker and manifest included.
 
 ```
 src/
-  types/          domain model (Product, PriceRecord, Settings, AppData)
+  types/          domain model (ShoppingListMeta, Product, PriceRecord, AppData)
   data/seed.ts    the preloaded catalogue — pure data, no UI
   lib/
     pwa.ts        service-worker registration, updates, install prompt
     calc.ts       all money/deal/stat maths as pure functions
+    lists.ts      creating lists, and migrating data saved before they existed
     currency.ts   the ISO currency list, derived from the runtime's own data
     rates.ts      fetching, caching and applying exchange rates
     money.ts      formatting and price parsing
@@ -162,6 +170,25 @@ Three rules hold the structure together:
 3. **Persistence is an interface.** `lib/storage` exposes an async
    `PersistenceAdapter` (`load` / `save` / `clear`). IndexedDB is the default,
    localStorage the fallback, in-memory the last resort.
+
+### How several lists are stored
+
+`products` stays a single flat array; each product carries the `listId` of the
+list it belongs to, and `lists` holds the name and budget of each. The alternative
+— nesting products inside their list — would have meant rewriting every screen, so
+instead `useProducts()` narrows to the open list and almost nothing else changed.
+
+The budget moved off `settings` and onto each list. Currency, theme, exchange
+rates and the warning threshold are still app-wide, because they describe how you
+read numbers rather than what you are buying.
+
+Data written before lists existed has none of this, and it is already on people's
+phones, so `migrateToLists()` runs on every load and on every import. Its rule is
+that **nothing is ever dropped**: a file with no lists gets one, carrying its old
+global budget; every product with a missing or unknown `listId` is adopted into
+the first list rather than becoming invisible; a bad `activeListId` is repaired.
+`src/lib/lists.test.ts` covers each of those paths, including restoring a backup
+exported by the pre-lists version.
 
 ### Currencies and exchange rates
 
@@ -215,12 +242,13 @@ async and the state shape (`AppData`) maps directly to `products`,
 
 ## Testing
 
-`npm test` runs 125 unit tests covering budget totals, deal thresholds, price
+`npm test` runs 154 unit tests covering budget totals, deal thresholds, price
 statistics, store comparison, search/sort/filter, every reducer action, the
 import/export round trip, URL validation, currency formatting and rounding,
 rate conversion and re-basing, provider racing and failure, the cumulative
-spending series (gap filling, conversion, quantity, missing timestamps), and the
-integrity of the seed catalogue (no duplicates, one smartwatch, targets inside their stated
+spending series (gap filling, conversion, quantity, missing timestamps),
+creating/renaming/deleting/switching lists and migrating older data into them,
+and the integrity of the seed catalogue (no duplicates, one smartwatch, targets inside their stated
 ranges, and an estimated total that adds up to the products themselves).
 
 The UI was additionally driven end-to-end with Playwright across the acceptance
@@ -228,6 +256,12 @@ checklist — purchases, price logging, image upload, edit/delete, persistence
 across reloads, import/export, over-budget states, Shopping Mode, keyboard
 navigation, a 320px-wide viewport and a WCAG AA contrast sweep of every screen in
 both themes.
+
+The list feature got the same treatment: creating a list, switching between
+them, per-list budgets and totals, moving a product across, renaming, the guard
+that refuses to delete your last list, survival across a reload, and loading a
+database written by the pre-lists version to confirm its products and budget
+come back intact.
 
 The installable behaviour was verified the same way: manifest and every icon
 resolve, the service worker registers and takes control, the precache fills, and

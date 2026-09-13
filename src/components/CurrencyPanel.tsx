@@ -5,7 +5,7 @@ import { convert, isStale, STALE_AFTER_MS } from '@/lib/rates'
 import { formatMoney, parsePrice } from '@/lib/money'
 import { formatRelativeDay } from '@/lib/date'
 import { cx } from '@/lib/cx'
-import { usePlanner } from '@/context/plannerContext'
+import { useBudget, usePlanner } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -28,6 +28,7 @@ function relativeAge(updatedAt: string | null): string {
 export function CurrencyPanel() {
   const { state, actions } = usePlanner()
   const toast = useToast()
+  const budget = useBudget()
   const { currency, rates, autoRefreshRates } = state.settings
 
   const [busy, setBusy] = useState(false)
@@ -214,11 +215,11 @@ export function CurrencyPanel() {
                 <>
                   Using the current rate,{' '}
                   <span className="font-semibold text-ink">
-                    {formatMoney(state.settings.budget, currency)}
+                    {formatMoney(budget, currency)}
                   </span>{' '}
                   becomes{' '}
                   <span className="font-semibold text-ink">
-                    {formatMoney(convert(state.settings.budget, currency, pending, rates), pending)}
+                    {formatMoney(convert(budget, currency, pending, rates), pending)}
                   </span>
                   .
                 </>

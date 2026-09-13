@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { formatMoney, formatPercent } from '@/lib/money'
-import { usePlanner, useTotals } from '@/context/plannerContext'
+import { useProducts, useTotals } from '@/context/plannerContext'
 import { useProductDialogs } from '@/hooks/useProductDialogs'
 import {
   DEFAULT_FILTERS,
@@ -15,9 +15,9 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import { IconCart, IconPlus, IconSearch } from '@/components/icons'
 
 export function ShoppingList() {
-  const { state } = usePlanner()
+  const products = useProducts()
   const [filters, setFilters] = useState<ListFilters>(DEFAULT_FILTERS)
-  const visible = useFilteredProducts(state.products, filters)
+  const visible = useFilteredProducts(products, filters)
   const { dialogs, openDetails, openEdit, openLogPrice, togglePurchased } = useProductDialogs()
   const totals = useTotals()
 
@@ -56,12 +56,12 @@ export function ShoppingList() {
       <FilterBar
         filters={filters}
         onChange={setFilters}
-        products={state.products}
+        products={products}
         resultCount={visible.length}
       />
 
       {visible.length === 0 ? (
-        state.products.length === 0 ? (
+        products.length === 0 ? (
           <EmptyState
             icon={<IconCart className="size-6" />}
             title="Nothing on your list yet"

@@ -421,6 +421,8 @@ export function createSeedProducts(now: Date = new Date()): Product[] {
     const added = new Date(now.getTime() - (SEED_PRODUCTS.length - index) * 1000).toISOString()
     return {
       id: seed.id,
+      // Replaced with the real list id by whoever plants the seed.
+      listId: '',
       name: seed.name,
       category: seed.category,
       brand: seed.brand,

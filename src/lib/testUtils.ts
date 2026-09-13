@@ -7,6 +7,7 @@ export function makeProduct(overrides: Partial<Product> = {}): Product {
   const timestamp = `2026-09-${String((counter % 28) + 1).padStart(2, '0')}T10:00:00.000Z`
   return {
     id: `product-${counter}`,
+    listId: 'list-test',
     name: `Product ${counter}`,
     category: 'Electronics',
     image: null,

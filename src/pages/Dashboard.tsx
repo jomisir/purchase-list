@@ -4,7 +4,7 @@ import { categoryTotals, dealStatus, lineEstimate, priceStats } from '@/lib/calc
 import { formatMoney, formatPercent } from '@/lib/money'
 import { formatRelativeDay } from '@/lib/date'
 import { cx } from '@/lib/cx'
-import { usePlanner, useTotals } from '@/context/plannerContext'
+import { useActiveList, useLists, usePlanner, useProducts, useTotals } from '@/context/plannerContext'
 import { useProductDialogs } from '@/hooks/useProductDialogs'
 import { BudgetSummary } from '@/components/BudgetSummary'
 import { InstallHint } from '@/components/InstallHint'
@@ -28,7 +28,10 @@ import {
 
 export function Dashboard() {
   const { state } = usePlanner()
-  const { products, settings } = state
+  const { settings } = state
+  const products = useProducts()
+  const activeList = useActiveList()
+  const { lists } = useLists()
   const { dialogs, openDetails, openEdit, openLogPrice, togglePurchased } = useProductDialogs()
 
   const totals = useTotals()
@@ -73,8 +76,16 @@ export function Dashboard() {
       <>
         <EmptyState
           icon={<IconCart className="size-6" />}
-          title="Your planner is empty"
-          description="Add your first product, or restore the starter plan from Settings."
+          title={
+            lists.length > 1 && activeList ? `“${activeList.name}” is empty` : 'Your planner is empty'
+          }
+          description={
+            // A new list starts empty by design, so say which list this is and
+            // where its budget stands rather than implying the app lost data.
+            lists.length > 1 && activeList
+              ? `Nothing on this list yet. Its budget is ${formatMoney(activeList.budget, settings.currency)} — add the first item and it starts counting.`
+              : 'Add your first product, or restore the starter plan from Settings.'
+          }
           action={
             <ButtonLink to="/add">
               <IconPlus className="size-4" />

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { categoryTotals } from '@/lib/calc'
 import { formatMoney, formatPercent, parsePrice } from '@/lib/money'
 import { cx } from '@/lib/cx'
-import { usePlanner, useTotals } from '@/context/plannerContext'
+import { useBudget, usePlanner, useProducts, useTotals } from '@/context/plannerContext'
 import { useToast } from '@/components/ui/Toast'
 import { budgetStatusCopy, STATUS_TONE } from '@/components/BudgetSummary'
 import { Card, SectionHeading } from '@/components/ui/Card'
@@ -47,17 +47,19 @@ export function Budget() {
   const { state, actions } = usePlanner()
   const toast = useToast()
   const totals = useTotals()
+  const products = useProducts()
+  const budget = useBudget()
   const categories = useMemo(
-    () => categoryTotals(state.products, state.settings.currency, state.settings.rates),
-    [state.products, state.settings.currency, state.settings.rates],
+    () => categoryTotals(products, state.settings.currency, state.settings.rates),
+    [products, state.settings.currency, state.settings.rates],
   )
 
-  const [custom, setCustom] = useState(String(state.settings.budget))
+  const [custom, setCustom] = useState(String(budget))
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setCustom(String(state.settings.budget))
-  }, [state.settings.budget])
+    setCustom(String(budget))
+  }, [budget])
 
   const status = budgetStatusCopy(totals)
 
@@ -88,7 +90,7 @@ export function Budget() {
             Total budget
           </p>
           <p className="tnum mt-1 text-[32px] leading-none font-semibold tracking-tight text-ink">
-            {formatMoney(state.settings.budget, totals.currency)}
+            {formatMoney(budget, totals.currency)}
           </p>
 
           <div className="mt-4">
@@ -172,7 +174,7 @@ export function Budget() {
         <Card className="p-4 sm:p-5">
           <div className="flex flex-wrap gap-2">
             {QUICK_BUDGETS.map((amount) => {
-              const active = state.settings.budget === amount
+              const active = budget === amount
               return (
                 <button
                   key={amount}

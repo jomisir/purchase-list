@@ -3,7 +3,7 @@ import { spendingSeries, type SpendPoint } from '@/lib/spending'
 import { formatMoney, formatNumber } from '@/lib/money'
 import { formatLongDate, formatShortDate } from '@/lib/date'
 import { cx } from '@/lib/cx'
-import { usePlanner } from '@/context/plannerContext'
+import { useBudget, usePlanner, useProducts } from '@/context/plannerContext'
 import { useElementWidth } from '@/hooks/useElementWidth'
 import { Card } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -29,7 +29,8 @@ function niceCeiling(value: number): number {
 
 export function SpendingChart() {
   const { state } = usePlanner()
-  const { products, settings } = state
+  const products = useProducts()
+  const { settings } = state
   const [wrapRef, width] = useElementWidth<HTMLDivElement>()
   const [active, setActive] = useState<number | null>(null)
   const [view, setView] = useState<'chart' | 'table'>('chart')
@@ -39,7 +40,7 @@ export function SpendingChart() {
     [products, settings.currency, settings.rates],
   )
 
-  const budget = settings.budget
+  const budget = useBudget()
   const currency = settings.currency
 
   if (series.points.length === 0) {

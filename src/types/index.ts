@@ -66,8 +66,19 @@ export interface PriceRecord {
   source: PriceSource
 }
 
+/** One shopping list — your own, or one you are buying on someone's behalf. */
+export interface ShoppingListMeta {
+  id: string
+  name: string
+  /** Each list carries its own budget; currency and appearance stay app-wide. */
+  budget: number
+  createdAt: string
+}
+
 export interface Product {
   id: string
+  /** Which list this product belongs to. */
+  listId: string
   name: string
   category: Category
   brand?: string
@@ -101,7 +112,6 @@ export interface Product {
 export type ThemePreference = 'system' | 'light' | 'dark'
 
 export interface Settings {
-  budget: number
   /** Currency the budget and every total are expressed in. */
   currency: Currency
   theme: ThemePreference
@@ -118,6 +128,11 @@ export interface Settings {
 export interface AppData {
   /** Schema version, bumped when a migration is needed. */
   version: number
+  /** Every list. There is always at least one. */
+  lists: ShoppingListMeta[]
+  /** The list currently being viewed and edited. */
+  activeListId: string
+  /** Products across every list, each tagged with its `listId`. */
   products: Product[]
   settings: Settings
   /** Which seed revision was planted, so a reset can be detected. */

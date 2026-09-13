@@ -4,12 +4,15 @@ import { CATEGORIES } from '@/types'
 import { parsePrice } from '@/lib/money'
 import { validateUrl } from '@/lib/url'
 import type { ProductDraft } from '@/context/plannerReducer'
+import { useLists } from '@/context/plannerContext'
 import { Button } from '@/components/ui/Button'
 import { SelectField, TextAreaField, TextField } from '@/components/ui/Field'
 import { ImagePicker } from '@/components/ImagePicker'
 import { CurrencySelect } from '@/components/CurrencySelect'
 
 export interface ProductFormValues {
+  /** Which list the product belongs on. Travels beside the draft, not inside it. */
+  listId: string
   name: string
   currency: string
   price: string
@@ -28,8 +31,9 @@ export interface ProductFormValues {
 
 type Errors = Partial<Record<keyof ProductFormValues, string>>
 
-function emptyValues(): ProductFormValues {
+function emptyValues(listId: string): ProductFormValues {
   return {
+    listId,
     name: '',
     currency: 'AED',
     price: '',
@@ -49,6 +53,7 @@ function emptyValues(): ProductFormValues {
 
 function valuesFromProduct(product: Product): ProductFormValues {
   return {
+    listId: product.listId,
     name: product.name,
     currency: product.currency,
     price: String(product.estimatedPrice),
@@ -158,8 +163,9 @@ export function ProductForm({
   submitLabel?: string
   extraActions?: React.ReactNode
 }) {
+  const { lists, activeId } = useLists()
   const [values, setValues] = useState<ProductFormValues>(() =>
-    product ? valuesFromProduct(product) : emptyValues(),
+    product ? valuesFromProduct(product) : emptyValues(activeId),
   )
   const [errors, setErrors] = useState<Errors>({})
   const [submitted, setSubmitted] = useState(false)
@@ -214,6 +220,25 @@ export function ProductForm({
         autoComplete="off"
         maxLength={140}
       />
+
+      {lists.length > 1 ? (
+        <SelectField
+          label="List"
+          value={values.listId}
+          onChange={(event) => set('listId', event.target.value)}
+          hint={
+            product
+              ? 'Moving it takes its price history along.'
+              : 'Which of your lists this goes on.'
+          }
+        >
+          {lists.map((list) => (
+            <option key={list.id} value={list.id}>
+              {list.name}
+            </option>
+          ))}
+        </SelectField>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex items-start gap-2">

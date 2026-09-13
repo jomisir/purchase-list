@@ -5,7 +5,7 @@ import { CATEGORIES } from '@/types'
 import { matchesSearch, priceStats } from '@/lib/calc'
 import { formatMoney, formatPercent } from '@/lib/money'
 import { cx } from '@/lib/cx'
-import { usePlanner, useTotals } from '@/context/plannerContext'
+import { useActiveList, useLists, useProducts, useTotals } from '@/context/plannerContext'
 import { useProductDialogs } from '@/hooks/useProductDialogs'
 import { ProductImage } from '@/components/ProductImage'
 import { PurchaseCheckbox } from '@/components/PurchaseCheckbox'
@@ -127,7 +127,9 @@ function ShoppingRow({
 }
 
 export function ShoppingMode() {
-  const { state } = usePlanner()
+  const products = useProducts()
+  const activeList = useActiveList()
+  const { lists } = useLists()
   const { dialogs, openLogPrice, togglePurchased } = useProductDialogs()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<Category | 'all'>('all')
@@ -137,18 +139,18 @@ export function ShoppingMode() {
 
   const visible = useMemo(
     () =>
-      state.products.filter(
+      products.filter(
         (product) =>
           matchesSearch(product, query) &&
           (category === 'all' || product.category === category) &&
           (!hideBought || !product.purchased),
       ),
-    [state.products, query, category, hideBought],
+    [products, query, category, hideBought],
   )
 
   const usedCategories = useMemo(
-    () => CATEGORIES.filter((entry) => state.products.some((p) => p.category === entry)),
-    [state.products],
+    () => CATEGORIES.filter((entry) => products.some((p) => p.category === entry)),
+    [products],
   )
 
   return (
@@ -165,7 +167,8 @@ export function ShoppingMode() {
             </Link>
             <div className="min-w-0 flex-1 text-center">
               <h1 className="text-[14px] font-semibold tracking-tight text-ink">Shopping Mode</h1>
-              <p className="tnum text-[12px] text-ink-muted">
+              <p className="tnum truncate text-[12px] text-ink-muted">
+                {lists.length > 1 && activeList ? `${activeList.name} · ` : ''}
                 {totals.purchasedCount}/{totals.totalCount} bought
               </p>
             </div>
