@@ -35,6 +35,9 @@ mall basement. Everything is stored on your own device; nothing is uploaded.
   individual items in whatever currency you saw them in, and let the app convert.
   Exchange rates refresh from a live source in the background.
 - **Settings** — appearance, JSON export/import, reset to the starter plan.
+- **Dark mode** — a switch on the dashboard, plus a three-way choice (system /
+  light / dark) in Settings. The switch shows what you are actually looking at,
+  so while the device is still in charge it is marked "Auto".
 
 ### About the prices and rates
 
@@ -244,6 +247,8 @@ See `public/README-manifest.md`.
 - Usable down to 320px wide with no horizontal scrolling.
 - Touch targets are at least 36px, and Shopping Mode's checkboxes are 44px.
 - Product artwork is bundled SVG, so the whole catalogue renders offline.
+- The browser chrome (iOS status bar, Android address bar) is recoloured to match
+  the active theme.
 
 ## Accessibility
 

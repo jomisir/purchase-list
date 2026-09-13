@@ -8,6 +8,7 @@ import { usePlanner, useTotals } from '@/context/plannerContext'
 import { useProductDialogs } from '@/hooks/useProductDialogs'
 import { BudgetSummary } from '@/components/BudgetSummary'
 import { InstallHint } from '@/components/InstallHint'
+import { DarkModeSwitch } from '@/components/DarkModeSwitch'
 import { ProductCard } from '@/components/ProductCard'
 import { ProductImage } from '@/components/ProductImage'
 import { DealBadge } from '@/components/DealBadge'
@@ -88,9 +89,14 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-[20px] font-semibold tracking-tight text-ink lg:text-[26px]">
-          Dashboard
-        </h1>
+        {/* The switch sits on the heading line so the sentence below keeps the
+            full width and does not concertina on a narrow phone. */}
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-[20px] font-semibold tracking-tight text-ink lg:text-[26px]">
+            Dashboard
+          </h1>
+          <DarkModeSwitch />
+        </div>
         <p className="mt-1 text-[13px] text-ink-muted lg:text-[14px]">
           Everything you planned to buy, and what it is costing you.
         </p>
