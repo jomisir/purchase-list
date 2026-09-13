@@ -1,14 +1,14 @@
 # Publishes the planner to GitHub Pages, which gives it the https address a
 # phone needs before it will install the app and cache it for offline use.
 #
-# One-time setup: repository Settings -> Pages -> Source: "GitHub Actions".
-# Then run this workflow (Actions tab -> Deploy to GitHub Pages -> Run workflow),
-# or just push to the default branch.
+# The workflow turns Pages on by itself (`enablement: true` below), so there is
+# no repository setting to change first. It deploys whenever the default branch
+# is pushed, whatever that branch happens to be called, and can also be run by
+# hand from the Actions tab.
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, master]
   workflow_dispatch:
 
 permissions:
@@ -23,6 +23,10 @@ concurrency:
 
 jobs:
   build:
+    # Only the default branch is published; other branches still run nothing.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,6 +43,10 @@ jobs:
       - run: npm run build
 
       - uses: actions/configure-pages@v5
+        with:
+          # Switches Pages on for the repository if it is not already enabled,
+          # using the `pages: write` permission granted above.
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
