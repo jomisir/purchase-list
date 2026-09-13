@@ -50,21 +50,19 @@ cached on the device so it runs with the network off.
 **Installing needs an `https` address** (or `localhost`) — that is a browser rule
 for offline caching, not a choice this app makes. There are two practical routes.
 
-### Option A — GitHub Pages (recommended, fully offline)
+### Option A — the published site (recommended, fully offline)
 
-A free https address for your own copy. `.github/workflows/deploy.yml` turns
-Pages on by itself, so there is no repository setting to change first — it
-deploys on every push to the default branch, and can also be run by hand from
-**Actions → Deploy to GitHub Pages → Run workflow**.
+It is already live:
 
-The published address is:
+**<https://jomisir.github.io/purchase-list/>**
 
-```
-https://jomisir.github.io/purchase-list/
-```
+Open that on your phone and follow the steps in **Settings → Install on your
+phone**. Nothing to set up.
 
-Open it on your phone, then follow the steps in **Settings → Install on your
-phone**.
+`.github/workflows/deploy.yml` rebuilds and republishes on every push to the
+default branch (running the tests first), so the address always serves the
+current code. It publishes by force-pushing the built output to the `gh-pages`
+branch — that branch is generated, never edit it by hand.
 
 After the first load the app is cached. Turn off mobile data and it still opens,
 still shows your list, and still records prices and purchases.

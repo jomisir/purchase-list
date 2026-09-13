@@ -1,20 +1,23 @@
-# Publishes the planner to GitHub Pages, which gives it the https address a
-# phone needs before it will install the app and cache it for offline use.
+# Rebuilds the planner and republishes it to GitHub Pages on every push to the
+# default branch. The site is served from the `gh-pages` branch, which this
+# workflow force-pushes — that branch holds build output only, never source.
 #
-# The workflow turns Pages on by itself (`enablement: true` below), so there is
-# no repository setting to change first. It deploys whenever the default branch
-# is pushed, whatever that branch happens to be called, and can also be run by
-# hand from the Actions tab.
+# Published at https://jomisir.github.io/purchase-list/
+#
+# Why a branch rather than actions/deploy-pages: creating a Pages site through
+# the API needs admin rights that the workflow token does not have, so the
+# artifact-based flow cannot bootstrap itself. Pushing a branch is an ordinary
+# git write, which the token can do.
 name: Deploy to GitHub Pages
 
 on:
   push:
+    # gh-pages holds generated output; publishing to it must not re-trigger this.
+    branches-ignore: [gh-pages]
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 # Let a running deploy finish; queue at most one more.
 concurrency:
@@ -22,8 +25,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    # Only the default branch is published; other branches still run nothing.
+  deploy:
+    # Only the default branch is published, whatever it happens to be called.
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.ref_name == github.event.repository.default_branch
@@ -38,26 +41,26 @@ jobs:
 
       - run: npm ci
 
+      # A broken build must never reach the phone that is relying on it.
       - run: npm test
 
       - run: npm run build
 
-      - uses: actions/configure-pages@v5
-        with:
-          # Switches Pages on for the repository if it is not already enabled,
-          # using the `pages: write` permission granted above.
-          enablement: true
+      - name: Prepare the published tree
+        run: |
+          # Stop Pages running Jekyll over the output, which would drop _-files.
+          touch dist/.nojekyll
+          # Serve the app for unknown paths too, so a stale deep link still works.
+          cp dist/index.html dist/404.html
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish to the gh-pages branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd dist
+          git init -q -b gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -q -m "Publish ${GITHUB_SHA:0:7}"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
